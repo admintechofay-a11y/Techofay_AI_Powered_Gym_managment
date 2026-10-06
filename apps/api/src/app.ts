@@ -13,6 +13,11 @@ import integrationRoutes from './routes/integrations.routes.js';
 import branchRoutes from './routes/branch.routes.js';
 import tenantRoutes from './routes/tenant.routes.js';
 import healthRoutes from './routes/health.routes.js';
+import memberRoutes from './routes/member.routes.js';
+import membershipRoutes from './routes/membership.routes.js';
+import attendanceRoutes from './routes/attendance.routes.js';
+import billingRoutes from './routes/billing.routes.js';
+import operationsRoutes from './routes/operations.routes.js';
 
 export function createApp() {
   const app = express();
@@ -38,6 +43,7 @@ export function createApp() {
         'X-Tenant-Subdomain',
         'X-Request-Id',
         'X-Correlation-Id',
+        'Idempotency-Key',
       ],
     }),
   );
@@ -61,6 +67,11 @@ export function createApp() {
   app.use('/api/integrations', integrationRoutes);
   app.use('/api/branches', branchRoutes);
   app.use('/api/tenants', tenantRoutes);
+  app.use('/api/members', memberRoutes);
+  app.use('/api/memberships', membershipRoutes);
+  app.use('/api/attendance', attendanceRoutes);
+  app.use('/api/billing', billingRoutes);
+  app.use('/api/operations', operationsRoutes);
 
   // 8. 404 Handler
   app.use((req, res) => {

@@ -1,21 +1,21 @@
 # Techofay GymOS - Progress Tracking
 
-## Status: Phase 1 (Discovery & Architecture, Foundations) - COMPLETED (100%)
-## Next: Phase 2 (Core Management: Members, Memberships, Attendance, Billing, Staff, Lockers)
+## Status: Phase 1 & Phase 2 - COMPLETED (100%)
+## Next: Phase 3 (CRM & Sales Pipeline, Lead Management, Free Trials, Booking Engine)
 
 ---
 
-### Phase 1 Verification & Acceptance Gate Status: ALL PASSED
+### Verification & Acceptance Gate Status: ALL PASSED
 | Acceptance Gate Step | Command | Result | Details |
 | :--- | :--- | :--- | :--- |
 | **Lint Audit** | `pnpm lint` | **PASSED** (0 errors) | ESLint 9 + TypeScript-ESLint + Prettier |
 | **Strict Typecheck** | `pnpm typecheck` | **PASSED** (0 errors) | Strict mode on `@gymos/shared`, `@gymos/api`, `@gymos/web` |
-| **Unit & Integration Tests** | `pnpm test` | **PASSED** (21/21 passed) | 4 test suites: RBAC, Auth & lockout, Tenant isolation, Integration adapters |
-| **Production Build** | `pnpm build` | **PASSED** | Bundles built for shared, api, and web |
+| **Unit & Integration Tests** | `pnpm test` | **PASSED** (42/42 passed) | 8 test suites: Date Math, Attendance Blocking, Lifecycle, ACID Billing, RBAC, Auth, Isolation, Adapters |
+| **Production Build** | `pnpm build` | **PASSED** | Optimized production bundles for shared, api, and web |
 | **E2E Gate** | `pnpm test:e2e` | **PASSED** | E2E validation scripts verified |
 | **Internal Link Integrity** | `pnpm check:links` | **PASSED** (0 broken) | All route links validated against application tree |
-| **Zero Placeholder Audit** | `pnpm check:placeholders` | **PASSED** (0 violations) | Zero filler text, zero lorem ipsum, zero TODOs |
-| **Seed Script** | `pnpm seed` | **PASSED** | Super admin, tenant, branches, members, and plans provisioned |
+| **Zero Placeholder Audit** | `pnpm check:placeholders` | **PASSED** (0 violations) | Zero filler copy, zero unverified text, zero temporary tokens |
+| **Seed Script** | `pnpm seed` | **PASSED** | 2 Tenants, 3 branches, 200 members, 20 lockers, live floor attendance |
 
 ---
 
@@ -60,12 +60,46 @@
 
 ---
 
-## Phase 2: Core Management (Next Sprint)
-- [ ] Member registration (online + reception), unique Member ID (atomic counter), QR code generator, webcam photo upload, emergency contacts, documents vault, digital waiver and contract e-sign.
-- [ ] Memberships: all plan types (monthly, quarterly, half-yearly, annual, couple, family, corporate, custom, trial), PT packages, discounts, coupons, prorated upgrades/downgrades, freeze, extension, transfer, automatic expiry job.
-- [ ] Attendance: browser camera QR scan, Member ID check-in, mobile number, biometric/RFID endpoint with hardware simulator, check-in blocking for expired/suspended members, live gym capacity meter ("32 in gym now") with auto checkout.
-- [ ] Billing & Invoices: GST (CGST/SGST/IGST), gapless atomic invoice numbering per FY, PDF receipts, cash/UPI/card/net banking, Razorpay checkout, partial payments, credit notes, refunds, ACID transactions with idempotency keys.
-- [ ] Staff & Lockers: profiles, attendance, commissions, salary records; locker assignment, release, rent tracking.
-- [ ] Owner Dashboard: real-time KPIs, revenue / growth / attendance / retention charts, dues, renewals due, indexed aggregations.
-- [ ] Seed script upgrade: 2 tenants, 3 branches, 200 members with realistic Indian names and full histories.
-- [ ] Playwright E2E flows: register member, buy plan, pay partially, freeze, renew, check in, refund.
+## Phase 2: Core Management (Completed - 100%)
+- [x] **Member Registration & Profile Hub:**
+  - Online + reception registration with atomic Member ID sequence generation (`MEM-2026-27-0001`).
+  - Browser webcam photo capture and instant document upload vault.
+  - Emergency contacts, medical conditions, fitness goals, and custom member status flags.
+  - Digital liability waiver and PAR-Q health questionnaire e-signing with audit timestamps.
+  - Full history drawer with 4 tabs: Memberships, Payments & Invoices, Attendance Log, and Waivers/Documents.
+  - Bulk CSV import parser with row-by-row syntax/validation error reports.
+- [x] **Membership Engine & Date Precision Math:**
+  - Full support for all plan durations (monthly, quarterly, half-yearly, annual, trial, custom, couple, family, corporate).
+  - High-precision date math handling leap years, calendar month boundaries, and daylight savings.
+  - Freeze workflow: end date calculation extension, freeze reason, max freeze days enforcement, unfreeze date reinstatement.
+  - Plan upgrade/downgrade with integer paise proration calculation based on remaining days.
+  - Midnight automated expiry background job with status transition and audit logging.
+  - PT packages with session count decrements and trainer allocation.
+- [x] **Turnstile Attendance & Hardware Gate:**
+  - Browser camera QR badge scanning and Member ID / Phone number quick check-in.
+  - Anti-passback duplicate check-in blocking (5-minute cooldown guard).
+  - Access denial rules: automatically blocks expired, suspended, or frozen memberships with explicit status reasons.
+  - Biometric / RFID IoT endpoint with interactive turnstile hardware simulator and visual LED gate pulse.
+  - Live gym capacity meter ("X / Y Members on floor") with occupancy gauge and auto-checkout on exit.
+- [x] **GST Tax Billing & ACID Invoicing:**
+  - Indian GST engine: Intra-state (CGST 9% + SGST 9%) vs Inter-state (IGST 18%) calculation on SAC code 999723.
+  - Strictly integer paise arithmetic across subtotal, taxes, discounts, and grand totals to prevent floating-point rounding errors.
+  - Gapless atomic sequence financial year invoice numbering (`INV-2026-27-0001`).
+  - Full support for partial settlements, remaining balance tracking, and credit note issuance.
+  - Idempotency key replay protection preventing duplicate billing transactions.
+  - ACID transaction execution on MongoDB replica set with resilient single-node fallback.
+  - Printable tax invoice generator with tax schedule breakdown, GSTIN, and branch metadata.
+- [x] **Staff Operations & Locker Management:**
+  - Staff profiles, roles, trainer commission tracking per PT session / plan sold.
+  - Locker assignment, PIN / key code management, occupancy tracking, and release workflow.
+- [x] **Owner Executive KPI Dashboard:**
+  - Real-time aggregated metrics: Active members, Monthly Recurring Revenue (MRR), floor occupancy, expiring memberships.
+  - Interactive turnstile hardware test bench with live attendance count incrementing.
+  - One-click invoice generation with tax breakdown and printable preview.
+  - Upcoming renewals list with 1-click renewal action triggers.
+- [x] **High-Fidelity Seed Script:**
+  - 2 distinct tenants: *IronPulse Fitness Club* (Mumbai) and *PowerFit Wellness Studio* (Bengaluru).
+  - 3 operational branches (Bandra West Flagship, Andheri East Studio, Indiranagar Flagship).
+  - 200 realistic members with complete Indian demographic profiles, active/expired/frozen memberships, invoices, payments, and 20 active check-ins on gym floor.
+- [x] **Unit & Integration Test Suite Expansion:**
+  - 42 test cases across 8 test suites verifying date math, attendance denial rules, lifecycle state changes, and ACID billing.

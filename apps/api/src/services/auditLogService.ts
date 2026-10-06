@@ -66,10 +66,10 @@ export class AuditLogService {
           : undefined;
 
       const userObjectId = params.userId
-        ? typeof params.userId === 'string'
+        ? Types.ObjectId.isValid(params.userId)
           ? new Types.ObjectId(params.userId)
-          : params.userId
-        : context?.userId
+          : undefined
+        : context?.userId && Types.ObjectId.isValid(context.userId)
           ? new Types.ObjectId(context.userId)
           : undefined;
 
