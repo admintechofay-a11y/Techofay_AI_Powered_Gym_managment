@@ -1,0 +1,81 @@
+name: GymOS CI Acceptance Gate
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  acceptance-gate:
+    name: Full Quality & Acceptance Gate
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: --health-cmd "mongosh --eval 'rs.status().ok || rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"localhost:27017\"}]}).ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${ runner.os }}-pnpm-store-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Code
+        run: pnpm lint
+
+      - name: TypeScript Strict Typecheck
+        run: pnpm typecheck
+
+      - name: Unit & Integration Tests
+        run: pnpm test
+        env:
+          JWT_ACCESS_SECRET: ci_jwt_access_secret_super_secure_32_characters_123
+          JWT_REFRESH_SECRET: ci_jwt_refresh_secret_super_secure_32_characters_456
+          COOKIE_SECRET: ci_cookie_secret_super_secure_32_characters_789
+          NODE_ENV: test
+
+      - name: Build Monorepo (Shared, API, Web)
+        run: pnpm build
+
+      - name: End-to-End Acceptance Tests
+        run: pnpm test:e2e
+
+      - name: Verify Dead Links
+        run: pnpm check:links
+
+      - name: Verify Zero Placeholder & Filler Text
+        run: pnpm check:placeholders

@@ -1,0 +1,273 @@
+=== PAGE 1 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 1
+TECHOFAY
+AI-POWERED GYM
+MANAGEMENT
+& BUSINESS GROWTH
+PLATFORM
+Scope of Work & Developer Requirements
+Prepared for product planning, software development, implementation and
+SaaS commercialization
+Product Positioning
+A scalable, multi-tenant SaaS platform combining Gym Management, Memberships, Attendance, Billing, CRM,
+Fitness Management, Marketing Automation, Analytics and AI.
+“Manage your gym. Grow your members. Automate your business.”
+
+
+=== PAGE 2 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 2
+1. Project Objective
+• Design and develop a powerful, secure and scalable gym-management platform for gyms, fitness centres,
+studios, personal training centres and multi-branch fitness chains.
+• Build the system as an API-first, modular and multi-tenant SaaS product so Techofay can onboard and manage
+multiple independent gym businesses.
+• Provide a strong alternative to established gym-management platforms by combining operational management
+with CRM, marketing automation, advanced analytics and AI.
+2. Core User Roles
+• Super Admin / SaaS Administrator
+• Gym Owner
+• Branch Manager
+• Receptionist
+• Trainer / Personal Trainer
+• Nutritionist
+• Sales / Business Development Executive
+• Accountant
+• Gym Member
+3. Super Admin & SaaS Administration
+• Gym/organization onboarding, activation, suspension and tenant management
+• Subscription plans, trials, billing and usage monitoring
+• Platform-wide analytics, revenue dashboard and system configuration
+• Feature flags, support/ticket management and audit logs
+• Tenant-level settings with strict data isolation
+4. Gym Owner Dashboard
+• Real-time KPIs: members, active/expired memberships, attendance, revenue, dues, leads and renewals
+• Revenue, membership growth, attendance, lead-funnel and retention charts
+• Trainer performance, branch comparison and business alerts
+5. Member Management
+• Online/reception registration, unique Member ID and QR code
+• Profile, photograph, emergency contact, documents and fitness information
+• Membership, payment, attendance, workout, diet, trainer and progress history
+• Member status: Active, Expired, Suspended and configurable custom statuses
+6. Membership Management
+• Monthly, quarterly, half-yearly, annual, custom, trial, couple, family and corporate plans
+• Personal training packages, discounts, coupons and promotional pricing
+• Membership start/end dates, freeze, extension, transfer, upgrade/downgrade and renewal
+• Automated expiry and renewal workflows
+7. Attendance Management
+• QR, Member ID, mobile number and manual check-in/check-out
+• Optional biometric/RFID integrations
+• Attendance history, peak-hour analytics and inactive-member identification
+
+
+=== PAGE 3 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 3
+• Configurable automated follow-up for members with low attendance
+8. Billing & Payments
+• Cash, UPI, card, net banking and payment gateway support
+• Invoices, receipts, GST-compatible billing, partial payments, refunds and adjustments
+• Outstanding dues, payment history and automated payment reminders
+• Revenue, expense and net-revenue dashboards
+
+
+=== PAGE 4 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 4
+9. CRM & Lead Management
+• Lead capture from website, Google, social media, WhatsApp, walk-ins, referrals and advertising campaigns
+• Pipeline: New → Contacted → Interested → Trial Booked → Trial Completed → Converted → Lost
+• Lead assignment, follow-ups, notes, call history, WhatsApp/email communication
+• Lead-source attribution, conversion tracking and sales-representative performance
+10. Trial Class & Booking Management
+• Trial registration, slot booking, trainer allocation and attendance
+• PT, group-class and trainer booking with capacity, cancellation and waitlist support
+• Automated confirmations, reminders and trial-to-member conversion tracking
+11. Trainer & Personal Training Management
+• Trainer profiles, qualifications, certifications, specializations and availability
+• Assigned-member dashboard, sessions, workout/diet plans and member progress
+• PT packages, session tracking, remaining sessions, expiry and trainer commission
+12. Workout & Exercise Management
+• Exercise library with muscle group, difficulty, instructions, images/videos and equipment
+• Daily/weekly/monthly workout plans with sets, repetitions, weight and rest time
+• Trainer-created personalized programs and member progress tracking
+13. Nutrition & Diet Management
+• Nutrition profile, calorie targets, meal schedules, food database and macronutrient tracking
+• Water intake, diet notes and progress history
+• AI-assisted preliminary diet recommendations with professional review controls
+14. Fitness Assessment & Progress
+• Weight, height, BMI, body fat, muscle mass and configurable body measurements
+• Measurement history, graphs, progress photos, goals and trainer observations
+• Before/after comparison and progress dashboard
+15. Communication & Notifications
+• WhatsApp Business API, SMS, email, in-app and push notifications
+• Expiry, renewal, payment, birthday, trial, appointment, inactivity and promotional messages
+• Template management and communication history
+
+
+=== PAGE 5 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 5
+16. Marketing Automation
+• New-member, renewal, win-back, festival, referral, trial and birthday campaigns
+• Audience segmentation by membership, attendance, age, location, spending, inactivity and fitness goals
+• Campaign performance and conversion reporting
+17. AI-Powered Features
+• AI member-retention / churn risk insights
+• AI lead scoring: Hot / Warm / Cold
+• AI follow-up recommendations and message generation
+• AI business insights and natural-language reporting
+• AI-assisted workout recommendations
+• AI chatbot for memberships, timings, pricing, trainers, trials and common support queries
+18. Expense & Inventory Management
+• Expense categories, vendors, recurring expenses, salary, utilities, equipment and marketing expenses
+• Inventory for supplements, merchandise, apparel, accessories and equipment
+• Products, stock in/out, purchase, sales, suppliers and low-stock alerts
+19. Staff & Role Management
+• Staff profiles, attendance, permissions, performance, commissions and salary records
+• Role-based access control with configurable module permissions
+20. Multi-Branch Management
+• Centralized management of multiple gym branches
+• Branch-wise members, revenue, attendance, expenses, staff and performance
+• Cross-branch comparison and consolidated reporting
+21. Member Portal / PWA
+• Responsive web/PWA access on desktop, tablet and mobile
+• Member profile, membership, QR code, attendance, workout, diet, trainer, payments, invoices, notifications and
+progress
+
+
+=== PAGE 6 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 6
+22. Website & Lead Integration
+• Public website pages for plans, trainers, facilities, gallery, testimonials and contact
+• Online trial booking and membership enquiry forms
+• Website leads automatically pushed into CRM
+• Google Maps, WhatsApp and payment integration
+23. Reports & Analytics
+• Member, membership, revenue, payment, attendance, trainer, PT, lead, conversion, renewal, churn and expense
+reports
+• Export to PDF, Excel and CSV
+• Role-based dashboards and configurable date/branch filters
+24. Security & Compliance Requirements
+• HTTPS/SSL, secure authentication, password hashing and token/session security
+• Role-based access control, API authentication and rate limiting
+• Secure file upload, audit logs, login history, backups and disaster-recovery procedures
+• Tenant data isolation and least-privilege access
+• Privacy controls for personal and fitness information
+25. Recommended Technology Stack
+Layer
+Recommended Technology
+Purpose
+Frontend
+React.js / Next.js + TypeScript + Tailwind CSS
+Fast, responsive, maintainable web application and PWA
+Backend
+Node.js + NestJS + TypeScript
+Scalable modular APIs and business logic
+Database
+PostgreSQL
+Transactional core data and multi-tenant architecture
+Caching / Queues
+Redis
+Caching, sessions, rate limits and background jobs
+Search
+OpenSearch / Elasticsearch (optional)
+Advanced search and analytics
+AI Layer
+LLM API + AI orchestration + optional vector DB
+AI assistant, insights, lead scoring and knowledge
+retrieval
+Cloud
+AWS / Azure / Google Cloud
+Production hosting, storage, networking and monitoring
+DevOps
+Docker + CI/CD; Kubernetes when scale requires
+Repeatable deployment and horizontal scaling
+Storage
+Object storage + CDN
+Member documents, images, videos and backups
+26. Recommended Integrations
+• Payment gateway such as Razorpay or equivalent
+• WhatsApp Business API provider
+• SMS gateway and transactional email provider
+• Google Maps and authentication providers where required
+• Accounting/ERP APIs where required
+• Biometric, RFID and QR attendance hardware
+• Analytics and monitoring platforms
+
+
+=== PAGE 7 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 7
+27. SaaS Architecture & Commercial Model
+• Multi-tenant architecture with isolated gym organizations and configurable tenant settings
+• Central Super Admin console for onboarding, subscription plans, feature controls and usage monitoring
+• Suggested SaaS tiers: Starter, Professional and Enterprise
+• Architecture should support white-label deployments and future mobile applications
+28. Development Phases
+Phase
+Scope
+1. Discovery & Architecture
+Requirements, workflows, database model, UI/UX, API and technical architecture
+2. Core Management
+Admin, members, memberships, attendance, billing and staff
+3. CRM & Fitness
+Leads, sales pipeline, trainers, PT, workout, nutrition and assessments
+4. Automation
+WhatsApp, SMS, email, notifications and marketing automation
+5. AI & Analytics
+AI assistant, lead scoring, retention insights and advanced dashboards
+6. SaaS & Multi-Branch
+Tenant management, subscription plans, branches, Super Admin and usage analytics
+7. QA & Deployment
+Functional, API, security and performance testing, UAT, deployment and documentation
+29. Competitive Positioning
+The product should compete with established gym-management solutions such as OKFIT and comparable
+platforms while differentiating through business-growth capabilities.
+Capability
+Techofay Platform
+Gym & Member Management
+✓
+Membership & Attendance
+✓
+Billing & Payments
+✓
+CRM & Lead Pipeline
+✓
+WhatsApp & Marketing Automation
+✓
+Trainer / PT / Workout / Nutrition
+✓
+Multi-Branch & SaaS
+✓
+Advanced Business Analytics
+✓
+AI Lead Scoring & Retention Insights
+✓
+AI Business Assistant / Chatbot
+✓
+API-First & White-Label Potential
+✓
+30. Developer Acceptance Principles
+• Modular codebase with documented APIs and database schema
+• Responsive UI across desktop, tablet and mobile
+• Role-based permissions enforced at API and UI levels
+• Automated testing for critical workflows
+• Logging, monitoring and error tracking enabled in production
+• Backup and recovery procedures documented
+• No cross-tenant data leakage
+
+
+=== PAGE 8 ===
+Techofay Global Ventures Pvt. Ltd. | Gym Management Platform
+Page 8
+• Third-party integrations isolated behind service interfaces to allow provider changes
+• AI features must include configurable safeguards and human-review controls where recommendations affect
+fitness or nutrition decisions
+TECHOFAY GYMO S
+AI-powered Gym Management & Business Growth Platform
+Built for operational efficiency today and scalable SaaS growth tomorrow.
+
+

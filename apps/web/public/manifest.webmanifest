@@ -1,0 +1,16 @@
+{
+  "name": "Techofay GymOS",
+  "short_name": "GymOS",
+  "description": "AI-Powered Gym Management System",
+  "start_url": "/member-portal",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
