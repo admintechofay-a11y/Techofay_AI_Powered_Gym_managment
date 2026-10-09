@@ -29,6 +29,10 @@ export interface INutrition extends Document {
   waterIntakeLiters: number;
   meals: INutritionMeal[];
   notes?: string;
+  status: 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  approvedByNutritionistId?: Types.ObjectId;
+  approvedAt?: Date;
+  reviewNotes?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -69,6 +73,15 @@ const NutritionSchema = new Schema<INutrition>(
     waterIntakeLiters: { type: Number, default: 3 },
     meals: [MealSchema],
     notes: { type: String },
+    status: {
+      type: String,
+      enum: ['DRAFT', 'PENDING_REVIEW', 'APPROVED', 'REJECTED'],
+      default: 'APPROVED',
+      index: true,
+    },
+    approvedByNutritionistId: { type: Schema.Types.ObjectId, ref: 'User' },
+    approvedAt: { type: Date },
+    reviewNotes: { type: String },
     isActive: { type: Boolean, default: true, index: true },
   },
   {

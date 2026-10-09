@@ -25,7 +25,15 @@ import {
   Dumbbell,
   UserCheck,
   ShieldAlert,
+  Send,
+  Megaphone,
+  UserPlus,
+  Calendar,
+  Flame,
+  Utensils,
+  Sparkles,
 } from 'lucide-react';
+import { AiChatbotWidget } from '../components/AiChatbotWidget.js';
 
 export const StaffDashboardLayout: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -54,6 +62,17 @@ export const StaffDashboardLayout: React.FC = () => {
   const navItems = [
     { name: t('nav.dashboard'), path: '/dashboard', icon: LayoutDashboard },
     { name: t('nav.members'), path: '/members', icon: Users },
+    { name: 'CRM & Pipeline', path: '/crm', icon: UserPlus },
+    { name: 'Classes & Bookings', path: '/classes', icon: Calendar },
+    { name: 'Trainers & PT', path: '/trainers', icon: UserCheck },
+    { name: 'Workouts Library', path: '/workouts', icon: Dumbbell },
+    { name: 'Nutrition Plans', path: '/nutrition', icon: Utensils },
+    { name: 'Communication', path: '/communication', icon: Send },
+    { name: 'Marketing & Campaigns', path: '/marketing', icon: Megaphone },
+    { name: 'AI & Analytics', path: '/analytics', icon: Sparkles },
+    { name: 'Multi-Branch Engine', path: '/multi-branch', icon: Building2 },
+    { name: 'Inventory & Expenses', path: '/inventory-expenses', icon: Receipt },
+    { name: 'Super Admin Console', path: '/super-admin', icon: ShieldAlert },
     { name: t('nav.memberships'), path: '/memberships', icon: CreditCard },
     { name: t('nav.attendance'), path: '/attendance', icon: CalendarCheck },
     { name: t('nav.billing'), path: '/billing', icon: Receipt },
@@ -85,6 +104,11 @@ export const StaffDashboardLayout: React.FC = () => {
   const commandItems = [
     { title: 'Go to Dashboard', path: '/dashboard', category: 'Navigation' },
     { title: 'View All Members', path: '/members', category: 'Navigation' },
+    { title: 'AI & Advanced Analytics Hub', path: '/analytics', category: 'Intelligence' },
+    { title: 'Natural Language Business Reports', path: '/analytics', category: 'Intelligence' },
+    { title: 'Member Churn Risk Predictor', path: '/analytics', category: 'Intelligence' },
+    { title: 'Lead Scoring & Conversion AI', path: '/analytics', category: 'Intelligence' },
+    { title: 'SOW Sec 23 Business Reports', path: '/analytics', category: 'Reports' },
     { title: 'Check In Member by QR or ID', path: '/attendance', category: 'Action' },
     { title: 'Generate Tax Invoice', path: '/billing', category: 'Action' },
     { title: 'Integration Diagnostics', path: '/settings/integrations', category: 'Settings' },
@@ -179,25 +203,25 @@ export const StaffDashboardLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         {/* Topbar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-4 sm:px-6">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-3 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg text-muted-foreground hover:bg-muted"
+              className="lg:hidden p-2 rounded-lg text-muted-foreground hover:bg-muted shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             {/* Branch Switcher */}
-            <div className="relative">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground cursor-pointer hover:bg-muted/50">
-                <Building2 className="w-3.5 h-3.5 text-primary" />
+            <div className="relative min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-medium text-foreground cursor-pointer hover:bg-muted/50 max-w-[120px] sm:max-w-none">
+                <Building2 className="w-3.5 h-3.5 text-primary shrink-0" />
                 <select
                   value={activeBranchId || branches[0].id}
                   onChange={(e) => setActiveBranchId(e.target.value)}
-                  className="bg-transparent border-none text-xs font-medium focus:outline-none cursor-pointer pr-4"
+                  className="bg-transparent border-none text-xs font-medium focus:outline-none cursor-pointer pr-2 truncate w-full"
                 >
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -211,7 +235,7 @@ export const StaffDashboardLayout: React.FC = () => {
             {/* Command Palette Trigger */}
             <button
               onClick={() => setCmdOpen(true)}
-              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-muted/40 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-muted/40 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all shrink-0"
             >
               <Search className="w-3.5 h-3.5" />
               <span>Search or Jump to...</span>
@@ -221,9 +245,9 @@ export const StaffDashboardLayout: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Language Switcher */}
-            <div className="flex items-center rounded-lg border border-border bg-card p-0.5 text-xs">
+            <div className="hidden sm:flex items-center rounded-lg border border-border bg-card p-0.5 text-xs">
               <button
                 onClick={() => handleLanguageChange('en')}
                 className={`px-2 py-1 rounded font-medium ${
@@ -303,7 +327,7 @@ export const StaffDashboardLayout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full min-w-0 overflow-x-hidden">
           <Outlet />
         </main>
       </div>
@@ -341,6 +365,9 @@ export const StaffDashboardLayout: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Floating AI Gym Concierge Widget */}
+      <AiChatbotWidget />
     </div>
   );
 };

@@ -25,6 +25,9 @@ const IGNORED_FILES = new Set([
   'CLAUDE.md',
   'SOW_extracted.txt',
   'DATABASE.md',
+  'LAUNCH_AUDIT.md',
+  'PROGRESS.md',
+  'IMAGE_CREDITS.md',
 ]);
 
 let violations = 0;

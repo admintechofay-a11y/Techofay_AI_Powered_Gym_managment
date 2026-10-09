@@ -161,7 +161,7 @@ export const DashboardOverviewPage: React.FC = () => {
   const grandTotal = taxableSubtotal + taxTotal;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full min-w-0">
       {/* Header bar with Live Capacity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -256,7 +256,7 @@ export const DashboardOverviewPage: React.FC = () => {
       {/* Charts & Activity Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Velocity Chart */}
-        <Card className="lg:col-span-2 border-border/80">
+        <Card className="lg:col-span-2 border-border/80 min-w-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="text-base">Weekly Revenue Velocity</CardTitle>
@@ -303,7 +303,7 @@ export const DashboardOverviewPage: React.FC = () => {
         </Card>
 
         {/* Live Gate Check-ins Stream */}
-        <Card className="border-border/80">
+        <Card className="border-border/80 min-w-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="text-base">Live Floor Telemetry</CardTitle>

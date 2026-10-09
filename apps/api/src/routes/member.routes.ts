@@ -3,6 +3,7 @@ import { MemberService } from '../services/memberService.js';
 import { Member } from '../models/Member.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import { requirePermission } from '../middleware/rbacMiddleware.js';
+import { checkTenantLimit } from '../middleware/tenantLimitsMiddleware.js';
 import { APP_MODULES, PERMISSION_ACTIONS } from '@gymos/shared';
 
 const router = Router();
@@ -12,6 +13,7 @@ router.use(authMiddleware);
 router.post(
   '/',
   requirePermission(APP_MODULES.MEMBERS, PERMISSION_ACTIONS.CREATE),
+  checkTenantLimit('members'),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const member = await MemberService.registerMember({

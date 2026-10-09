@@ -7,11 +7,22 @@ async function bootstrap() {
 
   // Connect to MongoDB
   try {
-    await mongoose.connect(env.MONGODB_URI);
-    console.log(`[DATABASE] Connected to MongoDB replica set at ${env.MONGODB_URI}`);
+    await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 3000 });
+    console.log(`[DATABASE] Connected to MongoDB at ${env.MONGODB_URI}`);
   } catch (error) {
-    console.warn(`[DATABASE] MongoDB connection warning: ${error}`);
-    console.warn('[DATABASE] If running locally without Docker, run: docker compose up -d mongo');
+    if (env.MONGODB_URI.includes('replicaSet=')) {
+      const fallbackUri = env.MONGODB_URI.replace(/[?&]replicaSet=[^&]+/, '');
+      console.log(`[DATABASE] Replica set not reachable, falling back to standalone MongoDB at ${fallbackUri}...`);
+      try {
+        await mongoose.connect(fallbackUri, { serverSelectionTimeoutMS: 3000 });
+        console.log(`[DATABASE] Connected to standalone MongoDB at ${fallbackUri}`);
+      } catch (fallbackError) {
+        console.warn(`[DATABASE] Standalone MongoDB connection error: ${fallbackError}`);
+      }
+    } else {
+      console.warn(`[DATABASE] MongoDB connection warning: ${error}`);
+      console.warn('[DATABASE] If running locally without Docker, run: docker compose up -d mongo');
+    }
   }
 
   const app = createApp();

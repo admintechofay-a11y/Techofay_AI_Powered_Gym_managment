@@ -25,15 +25,31 @@ import {
   Invoice,
   Payment,
   Lead,
+  LeadActivity,
+  Trial,
+  Booking,
   Class,
+  Trainer,
+  PtPackage,
   Exercise,
+  WorkoutPlan,
+  WorkoutLog,
+  Nutrition,
+  Food,
+  WaterLog,
+  Assessment,
   Counter,
   Locker,
   Commission,
   Staff,
+  Review,
+  Referral,
+  Wallet,
 } from '../models/index.js';
 import { AuthService } from '../services/authService.js';
 import { runInContext } from '../context/requestContext.js';
+import { EXERCISE_LIBRARY } from './exerciseData.js';
+import { INDIAN_FOOD_DATABASE } from './foodData.js';
 
 // Realistic Indian Names Dataset
 const FIRST_NAMES_MALE = [
@@ -63,12 +79,27 @@ export async function runSeed(customMongoUri?: string) {
       console.log(`[SEED] Connecting to database at ${uri}...`);
       await mongoose.connect(uri, { serverSelectionTimeoutMS: 2000 });
     } catch {
-      console.log('[SEED] Local MongoDB is not running. Starting embedded in-memory database to seed...');
-      const { MongoMemoryServer } = await import('mongodb-memory-server');
-      mongoServer = await MongoMemoryServer.create();
-      const inMemoryUri = mongoServer.getUri();
-      console.log(`[SEED] Connected to embedded in-memory database at ${inMemoryUri}`);
-      await mongoose.connect(inMemoryUri);
+      if (uri.includes('replicaSet=')) {
+        const fallbackUri = uri.replace(/[?&]replicaSet=[^&]+/, '');
+        try {
+          console.log(`[SEED] Retrying connection at standalone MongoDB: ${fallbackUri}...`);
+          await mongoose.connect(fallbackUri, { serverSelectionTimeoutMS: 2000 });
+        } catch {
+          console.log('[SEED] Local MongoDB is not running. Starting embedded in-memory database to seed...');
+          const { MongoMemoryServer } = await import('mongodb-memory-server');
+          mongoServer = await MongoMemoryServer.create();
+          const inMemoryUri = mongoServer.getUri();
+          console.log(`[SEED] Connected to embedded in-memory database at ${inMemoryUri}`);
+          await mongoose.connect(inMemoryUri);
+        }
+      } else {
+        console.log('[SEED] Local MongoDB is not running. Starting embedded in-memory database to seed...');
+        const { MongoMemoryServer } = await import('mongodb-memory-server');
+        mongoServer = await MongoMemoryServer.create();
+        const inMemoryUri = mongoServer.getUri();
+        console.log(`[SEED] Connected to embedded in-memory database at ${inMemoryUri}`);
+        await mongoose.connect(inMemoryUri);
+      }
     }
   }
 
@@ -77,6 +108,8 @@ export async function runSeed(customMongoUri?: string) {
     await Promise.all([
       Tenant.deleteMany({ subdomain: { $in: ['platform', 'ironpulse', 'powerfit'] } }),
       Counter.deleteMany({}),
+      Exercise.deleteMany({ isSystem: true }),
+      Food.deleteMany({ isSystem: true }),
     ]);
 
     const defaultPassword = 'Password@123';
@@ -150,9 +183,9 @@ export async function runSeed(customMongoUri?: string) {
       facilities: ['Functional Training', 'Cardio Area', 'Showers & Lockers'],
     });
 
-    // Staff for IronPulse across all 9 roles
+    // Staff for IronPulse across all roles
     console.log('[SEED] Creating IronPulse staff across roles...');
-    const ipOwner = await User.create({
+    await User.create({
       tenantId: ironPulseTenant._id,
       branchIds: [bandraBranch._id, andheriBranch._id],
       name: 'Rohan Deshmukh',
@@ -163,7 +196,7 @@ export async function runSeed(customMongoUri?: string) {
       isEmailVerified: true,
     });
 
-    const ipManager = await User.create({
+    await User.create({
       tenantId: ironPulseTenant._id,
       branchIds: [bandraBranch._id],
       name: 'Sneha Patil',
@@ -174,7 +207,7 @@ export async function runSeed(customMongoUri?: string) {
       isEmailVerified: true,
     });
 
-    const ipReception = await User.create({
+    await User.create({
       tenantId: ironPulseTenant._id,
       branchIds: [bandraBranch._id],
       name: 'Kavita Nair',
@@ -185,7 +218,7 @@ export async function runSeed(customMongoUri?: string) {
       isEmailVerified: true,
     });
 
-    const ipTrainer = await User.create({
+    const ipTrainerUser = await User.create({
       tenantId: ironPulseTenant._id,
       branchIds: [bandraBranch._id],
       name: 'Arjun Khanna',
@@ -196,7 +229,7 @@ export async function runSeed(customMongoUri?: string) {
       isEmailVerified: true,
     });
 
-    await User.create({
+    const ipNutritionistUser = await User.create({
       tenantId: ironPulseTenant._id,
       branchIds: [bandraBranch._id],
       name: 'Dr. Ananya Roy',
@@ -207,7 +240,7 @@ export async function runSeed(customMongoUri?: string) {
       isEmailVerified: true,
     });
 
-    await User.create({
+    const ipSalesUser = await User.create({
       tenantId: ironPulseTenant._id,
       branchIds: [bandraBranch._id],
       name: 'Pooja Verma',
@@ -358,6 +391,8 @@ export async function runSeed(customMongoUri?: string) {
     // =========================================================================
     console.log('[SEED] Seeding 200 realistic members with memberships, invoices, payments & attendance...');
 
+    let firstIronPulseMember: any = null;
+
     const seedTenantMembers = async (
       tenantDoc: any,
       branches: any[],
@@ -381,7 +416,6 @@ export async function runSeed(customMongoUri?: string) {
         const branch = branches[(i - 1) % branches.length];
         const plan = plans[(i - 1) % plans.length];
 
-        // Status distribution: ~75% ACTIVE, ~18% EXPIRED, ~7% FROZEN
         let status: any = MEMBER_STATUS.ACTIVE;
         let membershipStatus: any = MEMBERSHIP_STATUS.ACTIVE;
         let startDate: Date;
@@ -424,6 +458,31 @@ export async function runSeed(customMongoUri?: string) {
           fitnessGoals: ['Hypertrophy', 'Fat Loss', 'Cardiovascular Endurance'],
           status,
           joinDate: startDate,
+          referralCode: `REF-${memberCode.replace(/[^a-zA-Z0-9]/g, '')}`,
+          leaderboardOptIn: true,
+        });
+
+        if (!firstIronPulseMember && codePrefix === 'IP-2026') {
+          firstIronPulseMember = member;
+        }
+
+        // Initialize wallet
+        await Wallet.create({
+          tenantId: tenantDoc._id,
+          memberId: member._id,
+          balanceInPaise: i === 1 ? 150000 : 0, // ₹1,500 initial wallet balance for demo
+          transactions:
+            i === 1
+              ? [
+                  {
+                    type: 'CREDIT',
+                    amountInPaise: 150000,
+                    balanceAfterInPaise: 150000,
+                    reason: 'Referral rewards bonus for inviting 3 gym buddies',
+                    timestamp: new Date(),
+                  },
+                ]
+              : [],
         });
 
         // 2. Invoice Document with GST
@@ -478,7 +537,7 @@ export async function runSeed(customMongoUri?: string) {
           dueDate: new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000),
         });
 
-        // 3. Payment Document (if paid)
+        // 3. Payment Document
         if (!isUnpaid) {
           const paymentNumber = await Counter.getNextSequence(tenantDoc._id, 'PAYMENT', 'RCPT');
           await Payment.create({
@@ -502,6 +561,9 @@ export async function runSeed(customMongoUri?: string) {
           memberId: member._id,
           planId: plan._id,
           invoiceId: invoice._id,
+          assignedTrainerId: ipTrainerUser._id,
+          sessionsRemaining: 8,
+          sessionsUsed: 2,
           startDate,
           endDate,
           status: membershipStatus,
@@ -510,26 +572,27 @@ export async function runSeed(customMongoUri?: string) {
           freezeDaysUsed: membershipStatus === MEMBERSHIP_STATUS.FROZEN ? 7 : 0,
         });
 
-        // 5. Attendance Records
+        // 5. Attendance Records (Consecutive streaks for engagement)
         if (status === MEMBER_STATUS.ACTIVE && membershipStatus === MEMBERSHIP_STATUS.ACTIVE) {
-          // Historical completed workouts
-          await Attendance.create({
-            tenantId: tenantDoc._id,
-            branchId: branch._id,
-            memberId: member._id,
-            checkInTime: new Date(now.getTime() - 26 * 60 * 60 * 1000),
-            checkOutTime: new Date(now.getTime() - 25 * 60 * 60 * 1000),
-            method: ATTENDANCE_METHOD.QR,
-            deviceId: 'TURNSTILE_01',
-          });
+          const streakLength = (i % 6) + 1; // 1 to 6 days consecutive check-ins
+          for (let dayOffset = streakLength; dayOffset >= 1; dayOffset--) {
+            await Attendance.create({
+              tenantId: tenantDoc._id,
+              branchId: branch._id,
+              memberId: member._id,
+              checkInTime: new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000 + 9 * 3600 * 1000),
+              checkOutTime: new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000 + 10.5 * 3600 * 1000),
+              method: ATTENDANCE_METHOD.QR,
+              deviceId: 'TURNSTILE_01',
+            });
+          }
 
-          // Live checked-in members inside the gym right now
           if (currentlyCheckedInCount < currentlyCheckedInTarget && i % 4 === 0) {
             await Attendance.create({
               tenantId: tenantDoc._id,
               branchId: branch._id,
               memberId: member._id,
-              checkInTime: new Date(now.getTime() - (15 + i * 2) * 60 * 1000), // checked in 15-45 mins ago
+              checkInTime: new Date(now.getTime() - (15 + i * 2) * 60 * 1000),
               method: ATTENDANCE_METHOD.QR,
               deviceId: 'TURNSTILE_01',
             });
@@ -541,109 +604,411 @@ export async function runSeed(customMongoUri?: string) {
       console.log(`[SEED] Seeded ${targetCount} members for ${tenantDoc.name} (${currentlyCheckedInCount} live on gym floor)`);
     };
 
-    // Seed 140 members for IronPulse (14 live on floor)
-    await seedTenantMembers(
-      ironPulseTenant,
-      [bandraBranch, andheriBranch],
-      [ipMonthlyPlan, ipQuarterlyPlan, ipAnnualPlan],
-      'IP-2026',
-      140,
-      14,
+    // Seed 140 members for IronPulse & 60 for PowerFit
+    await seedTenantMembers(ironPulseTenant, [bandraBranch, andheriBranch], [ipMonthlyPlan, ipQuarterlyPlan, ipAnnualPlan], 'IP-2026', 140, 14);
+    await seedTenantMembers(powerFitTenant, [indiraBranch], [pfMonthlyPlan, pfAnnualPlan], 'PF-2026', 60, 6);
+
+    // =========================================================================
+    // 5. Seed 150+ Exercises Library & 300+ Indian Foods Database
+    // =========================================================================
+    console.log(`[SEED] Seeding ${EXERCISE_LIBRARY.length} exercises from comprehensive fitness library...`);
+    await Exercise.insertMany(
+      EXERCISE_LIBRARY.map((ex) => ({
+        tenantId: ironPulseTenant._id,
+        ...ex,
+        isSystem: true,
+      })),
     );
 
-    // Seed 60 members for PowerFit (6 live on floor)
-    await seedTenantMembers(
-      powerFitTenant,
-      [indiraBranch],
-      [pfMonthlyPlan, pfAnnualPlan],
-      'PF-2026',
-      60,
-      6,
+    console.log(`[SEED] Seeding ${INDIAN_FOOD_DATABASE.length} authentic Indian foods with full macros...`);
+    await Food.insertMany(
+      INDIAN_FOOD_DATABASE.map((f) => ({
+        tenantId: ironPulseTenant._id,
+        ...f,
+        isSystem: true,
+      })),
     );
 
     // =========================================================================
-    // 5. Lockers for IronPulse Bandra West
+    // 6. Seed CRM Leads (All 7 Pipeline Stages + Lost Reasons + Activities)
     // =========================================================================
-    console.log('[SEED] Creating Lockers for IronPulse Bandra...');
-    const bandraMembers = await Member.find({ branchId: bandraBranch._id }).limit(12);
-    for (let i = 1; i <= 20; i++) {
-      const lockerNum = `LK-${String(i).padStart(3, '0')}`;
-      const isOccupied = i <= bandraMembers.length;
-      await Locker.create({
+    console.log('[SEED] Seeding CRM Leads across all 7 pipeline stages...');
+    const leadData = [
+      { name: 'Priya Sharma', phone: '+919877712341', email: 'priya.sharma@leadcorp.org', stage: LEAD_PIPELINE_STATUS.NEW, score: LEAD_SCORE.HOT, source: LEAD_SOURCE.WEBSITE, notes: 'Looking for morning CrossFit and personal training.' },
+      { name: 'Sameer Sen', phone: '+919877712342', email: 'sameer.sen@leadcorp.org', stage: LEAD_PIPELINE_STATUS.CONTACTED, score: LEAD_SCORE.WARM, source: LEAD_SOURCE.GOOGLE, notes: 'Followed up via WhatsApp. Interested in 3-month package.' },
+      { name: 'Ananya Verma', phone: '+919877712343', email: 'ananya.verma@leadcorp.org', stage: LEAD_PIPELINE_STATUS.INTERESTED, score: LEAD_SCORE.HOT, source: LEAD_SOURCE.SOCIAL_MEDIA, notes: 'Wants to lose 8kg before wedding. Very motivated.' },
+      { name: 'Kabir Singhal', phone: '+919877712344', email: 'kabir.singhal@leadcorp.org', stage: LEAD_PIPELINE_STATUS.TRIAL_BOOKED, score: LEAD_SCORE.HOT, source: LEAD_SOURCE.WALK_IN, notes: 'Trial scheduled for tomorrow morning.' },
+      { name: 'Diya Kulkarni', phone: '+919877712345', email: 'diya.kulkarni@leadcorp.org', stage: LEAD_PIPELINE_STATUS.TRIAL_COMPLETED, score: LEAD_SCORE.HOT, source: LEAD_SOURCE.REFERRAL, notes: 'Loved the trial class with Arjun Khanna. Ready to join.' },
+      { name: 'Aditya Pillai', phone: '+919877712346', email: 'aditya.pillai@leadcorp.org', stage: LEAD_PIPELINE_STATUS.CONVERTED, score: LEAD_SCORE.HOT, source: LEAD_SOURCE.ADS, notes: 'Converted to annual member!' },
+      { name: 'Manish Dubey', phone: '+919877712347', email: 'manish.dubey@leadcorp.org', stage: LEAD_PIPELINE_STATUS.LOST, score: LEAD_SCORE.COLD, source: LEAD_SOURCE.WALK_IN, lostReason: 'Relocated to Pune for work' },
+      { name: 'Tanvi Trivedi', phone: '+919877712348', email: 'tanvi.trivedi@leadcorp.org', stage: LEAD_PIPELINE_STATUS.LOST, score: LEAD_SCORE.COLD, source: LEAD_SOURCE.WEBSITE, lostReason: 'Budget constraints' },
+      { name: 'Vikram Joshi', phone: '+919877712349', email: 'vikram.joshi@leadcorp.org', stage: LEAD_PIPELINE_STATUS.NEW, score: LEAD_SCORE.WARM, source: LEAD_SOURCE.WHATSAPP, notes: 'Enquired about couple discount.' },
+      { name: 'Rhea Bhatia', phone: '+919877712350', email: 'rhea.bhatia@leadcorp.org', stage: LEAD_PIPELINE_STATUS.CONTACTED, score: LEAD_SCORE.HOT, source: LEAD_SOURCE.SOCIAL_MEDIA, notes: 'Called today at 11 AM. Requested gym tour on Saturday.' },
+    ];
+
+    for (const ld of leadData) {
+      const lead = await Lead.create({
         tenantId: ironPulseTenant._id,
         branchId: bandraBranch._id,
-        lockerNumber: lockerNum,
-        size: i <= 5 ? 'LARGE' : i <= 15 ? 'MEDIUM' : 'SMALL',
-        status: isOccupied ? 'OCCUPIED' : 'AVAILABLE',
-        assignedMemberId: isOccupied ? bandraMembers[i - 1]._id : undefined,
-        assignedFrom: isOccupied ? new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) : undefined,
-        assignedUntil: isOccupied ? new Date(Date.now() + 50 * 24 * 60 * 60 * 1000) : undefined,
-        feeInPaise: 50000, // ₹500/mo
+        name: ld.name,
+        email: ld.email,
+        phone: ld.phone,
+        source: ld.source,
+        pipelineStatus: ld.stage,
+        leadScore: ld.score,
+        assignedToStaffId: ipSalesUser._id,
+        notes: ld.notes,
+        lostReason: ld.lostReason,
+        followUpDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      });
+
+      await LeadActivity.create({
+        tenantId: ironPulseTenant._id,
+        leadId: lead._id,
+        staffId: ipSalesUser._id,
+        type: ld.stage === LEAD_PIPELINE_STATUS.NEW ? 'NOTE' : 'CALL',
+        content: `Lead status updated to ${ld.stage}. ${ld.notes || ld.lostReason || ''}`.trim(),
       });
     }
 
     // =========================================================================
-    // 6. CRM Leads & Classes
+    // 7. Seed Trainers & PT Packages & Commissions & Reviews
     // =========================================================================
-    console.log('[SEED] Creating CRM Leads & Exercises...');
-    await Lead.create({
+    console.log('[SEED] Creating Trainer profiles, PT Packages, and Ratings...');
+    const trainerDoc = await Trainer.create({
       tenantId: ironPulseTenant._id,
-      branchId: bandraBranch._id,
-      name: 'Priya Sharma',
-      email: 'priya.sharma@example-lead.org',
-      phone: '+919877712345',
-      source: LEAD_SOURCE.WALK_IN,
-      pipelineStatus: LEAD_PIPELINE_STATUS.TRIAL_BOOKED,
-      leadScore: LEAD_SCORE.HOT,
-      notes: 'Interested in annual membership and CrossFit classes.',
-    });
-
-    await Exercise.create({
-      tenantId: ironPulseTenant._id,
-      name: 'Barbell Back Squat',
-      category: 'Strength',
-      targetMuscleGroup: 'Quadriceps',
-      secondaryMuscles: ['Glutes', 'Hamstrings', 'Core'],
-      difficulty: 'INTERMEDIATE',
-      instructions: 'Place barbell across upper traps. Descend keeping torso upright until thighs are parallel.',
-      equipmentRequired: 'Squat Rack & Barbell',
-      isSystem: true,
-    });
-
-    await Class.create({
-      tenantId: ironPulseTenant._id,
-      branchId: bandraBranch._id,
-      name: 'High Intensity HIIT Blast',
-      description: '45-minute metabolic conditioning circuit.',
-      trainerId: ipTrainer._id,
-      scheduleDays: ['MON', 'WED', 'FRI'],
-      startTime: '07:00',
-      endTime: '07:45',
-      capacity: 20,
-      waitlistCapacity: 5,
+      userId: ipTrainerUser._id,
+      branchIds: [bandraBranch._id],
+      specializations: ['Olympic Weightlifting', 'Functional Hypertrophy', 'Fat Loss Conditioning'],
+      qualifications: ['B.Sc. Exercise Science', 'CSCS Certified Strength & Conditioning Specialist'],
+      certifications: ['ACE Certified Personal Trainer', 'Kettlebell Athletics Level 2'],
+      bio: 'Over 8 years of coaching experience helping clients build lean muscle and recover from injuries.',
+      rating: 4.9,
+      defaultCommissionRatePercent: 20,
+      availabilitySchedule: [
+        { dayOfWeek: 'MON', slots: [{ startTime: '06:00', endTime: '12:00' }, { startTime: '16:00', endTime: '21:00' }] },
+        { dayOfWeek: 'TUE', slots: [{ startTime: '06:00', endTime: '12:00' }, { startTime: '16:00', endTime: '21:00' }] },
+        { dayOfWeek: 'WED', slots: [{ startTime: '06:00', endTime: '12:00' }, { startTime: '16:00', endTime: '21:00' }] },
+        { dayOfWeek: 'THU', slots: [{ startTime: '06:00', endTime: '12:00' }, { startTime: '16:00', endTime: '21:00' }] },
+        { dayOfWeek: 'FRI', slots: [{ startTime: '06:00', endTime: '12:00' }, { startTime: '16:00', endTime: '21:00' }] },
+        { dayOfWeek: 'SAT', slots: [{ startTime: '07:00', endTime: '14:00' }] },
+      ],
       isActive: true,
     });
 
+    const pt10Pack = await PtPackage.create({
+      tenantId: ironPulseTenant._id,
+      name: '10-Session Transformation Pack',
+      description: 'Personalized 1-on-1 coaching with nutrition roadmap and bio-mechanical analysis.',
+      numberOfSessions: 10,
+      validityDays: 60,
+      priceInPaise: 1500000, // ₹15,000
+      trainerCommissionPercent: 20,
+      isActive: true,
+    });
+
+    await PtPackage.create({
+      tenantId: ironPulseTenant._id,
+      name: '25-Session Elite Athlete Pack',
+      description: 'Comprehensive transformation package with weekly body fat assessment.',
+      numberOfSessions: 25,
+      validityDays: 120,
+      priceInPaise: 3200000, // ₹32,000
+      trainerCommissionPercent: 25,
+      isActive: true,
+    });
+
+    // Trainer Commission
+    await Commission.create({
+      tenantId: ironPulseTenant._id,
+      staffId: ipTrainerUser._id,
+      type: 'PT',
+      referenceId: pt10Pack._id,
+      amountInPaise: 300000, // ₹3,000 commission
+      ratePercent: 20,
+      status: 'APPROVED',
+      periodMonthYear: '2026-10',
+    });
+
+    // Reviews for Trainer
+    if (firstIronPulseMember) {
+      await Review.create({
+        tenantId: ironPulseTenant._id,
+        branchId: bandraBranch._id,
+        memberId: firstIronPulseMember._id,
+        trainerId: ipTrainerUser._id,
+        rating: 5,
+        reviewText: 'Arjun is an incredible trainer! His focus on form during squats and deadlifts corrected my 2-year lower back pain.',
+        isPublic: true,
+        isApproved: true,
+        status: 'APPROVED',
+      });
+    }
+
+    // =========================================================================
+    // 8. Seed Classes, Trials & Bookings (with Waitlist)
+    // =========================================================================
+    console.log('[SEED] Creating Group Classes & Bookings with Waitlist...');
+    const hiitClass = await Class.create({
+      tenantId: ironPulseTenant._id,
+      branchId: bandraBranch._id,
+      name: 'High Intensity HIIT Blast',
+      description: '45-minute metabolic conditioning circuit combining assault bike, kettlebells, and plyometrics.',
+      trainerId: ipTrainerUser._id,
+      scheduleDays: ['MON', 'WED', 'FRI'],
+      startTime: '07:00',
+      endTime: '07:45',
+      capacity: 5, // low capacity to demonstrate filled class & waitlist
+      waitlistCapacity: 3,
+      color: '#ef4444',
+      isActive: true,
+    });
+
+    const yogaClass = await Class.create({
+      tenantId: ironPulseTenant._id,
+      branchId: bandraBranch._id,
+      name: 'Power Vinyasa Flow Yoga',
+      description: 'Dynamic breath-synchronized yoga sequence focusing on core strength and flexibility.',
+      trainerId: ipTrainerUser._id,
+      scheduleDays: ['TUE', 'THU', 'SAT'],
+      startTime: '08:00',
+      endTime: '09:00',
+      capacity: 15,
+      waitlistCapacity: 5,
+      color: '#10b981',
+      isActive: true,
+    });
+
+    // Seed 5 confirmed bookings and 2 waitlist bookings for tomorrow's HIIT class
+    const tomorrowSlot = new Date();
+    tomorrowSlot.setDate(tomorrowSlot.getDate() + 1);
+    tomorrowSlot.setHours(7, 0, 0, 0);
+
+    const membersForBooking = await Member.find({ tenantId: ironPulseTenant._id }).limit(7);
+    for (let i = 0; i < membersForBooking.length; i++) {
+      const isWaitlist = i >= 5;
+      await Booking.create({
+        tenantId: ironPulseTenant._id,
+        branchId: bandraBranch._id,
+        memberId: membersForBooking[i]._id,
+        classId: hiitClass._id,
+        slotTime: tomorrowSlot,
+        status: isWaitlist ? 'WAITLIST' : 'CONFIRMED',
+        waitlistPosition: isWaitlist ? i - 4 : undefined,
+      });
+    }
+
+    // Trial
+    await Trial.create({
+      tenantId: ironPulseTenant._id,
+      branchId: bandraBranch._id,
+      name: 'Kabir Singhal',
+      phone: '+919877712344',
+      classId: hiitClass._id,
+      trainerId: ipTrainerUser._id,
+      slotTime: tomorrowSlot,
+      status: 'SCHEDULED',
+      notes: 'First time working out in 6 months.',
+    });
+
+    // =========================================================================
+    // 9. Seed Workout Plans, Templates & Member Workout Logs
+    // =========================================================================
+    console.log('[SEED] Creating Workout Plans, Templates and Logs...');
+    const exercisesInDb = await Exercise.find({ tenantId: ironPulseTenant._id }).limit(10);
+    const squatEx = exercisesInDb[0];
+    const benchEx = exercisesInDb[1] || exercisesInDb[0];
+    const deadliftEx = exercisesInDb[2] || exercisesInDb[0];
+
+    const workoutTemplate = await WorkoutPlan.create({
+      tenantId: ironPulseTenant._id,
+      createdByTrainerId: ipTrainerUser._id,
+      title: '3-Day Strength & Hypertrophy Foundation',
+      description: 'Proven full-body progressive overload template for intermediate lifters.',
+      daysPerWeek: 3,
+      isTemplate: true,
+      schedule: [
+        {
+          dayOfWeek: 'MON',
+          focus: 'Full Body Push & Squat Focus',
+          exercises: [
+            { exerciseId: squatEx._id, sets: 4, reps: 8, weightInKg: 80, restSeconds: 90, notes: 'Warm up thoroughly' },
+            { exerciseId: benchEx._id, sets: 4, reps: 10, weightInKg: 60, restSeconds: 90 },
+          ],
+        },
+        {
+          dayOfWeek: 'WED',
+          focus: 'Full Body Hinge & Pull Focus',
+          exercises: [
+            { exerciseId: deadliftEx._id, sets: 3, reps: 5, weightInKg: 100, restSeconds: 120 },
+          ],
+        },
+        {
+          dayOfWeek: 'FRI',
+          focus: 'Full Body Hypertrophy Pump',
+          exercises: [
+            { exerciseId: squatEx._id, sets: 3, reps: 12, weightInKg: 65, restSeconds: 60 },
+            { exerciseId: benchEx._id, sets: 3, reps: 12, weightInKg: 50, restSeconds: 60 },
+          ],
+        },
+      ],
+      isActive: true,
+    });
+
+    if (firstIronPulseMember) {
+      // Assign to member
+      await WorkoutPlan.create({
+        tenantId: ironPulseTenant._id,
+        memberId: firstIronPulseMember._id,
+        createdByTrainerId: ipTrainerUser._id,
+        title: `3-Day Strength - ${firstIronPulseMember.firstName}`,
+        description: workoutTemplate.description,
+        daysPerWeek: 3,
+        schedule: workoutTemplate.schedule,
+        startDate: new Date(),
+        isActive: true,
+      });
+
+      // Member workout log
+      await WorkoutLog.create({
+        tenantId: ironPulseTenant._id,
+        memberId: firstIronPulseMember._id,
+        title: 'Push Day Workout',
+        date: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        durationMinutes: 55,
+        exercises: [
+          { exerciseId: squatEx._id, exerciseName: squatEx.name, setsCompleted: 4, repsCompleted: 8, weightKg: 85 },
+          { exerciseId: benchEx._id, exerciseName: benchEx.name, setsCompleted: 4, repsCompleted: 10, weightKg: 65 },
+        ],
+        notes: 'Felt strong on bench press today. Hit new 5-rep PR.',
+      });
+    }
+
+    // =========================================================================
+    // 10. Seed Nutrition Plans, Water Logs & Assessments
+    // =========================================================================
+    console.log('[SEED] Creating Nutrition Plans and Fitness Assessments...');
+    if (firstIronPulseMember) {
+      await Nutrition.create({
+        tenantId: ironPulseTenant._id,
+        memberId: firstIronPulseMember._id,
+        createdByStaffId: ipNutritionistUser._id,
+        title: 'Lean Muscle Hypertrophy Diet Plan',
+        dailyCalorieTarget: 2450,
+        proteinGrams: 165,
+        carbsGrams: 280,
+        fatsGrams: 65,
+        waterIntakeLiters: 3.5,
+        meals: [
+          {
+            mealName: 'Breakfast (8:00 AM)',
+            time: '08:00',
+            foods: [
+              { foodName: 'Oats with Milk & Honey', quantity: '1 bowl', calories: 350, protein: 12, carbs: 55, fats: 8 },
+              { foodName: 'Boiled Whole Eggs', quantity: '3 eggs', calories: 216, protein: 19, carbs: 1, fats: 14 },
+            ],
+          },
+          {
+            mealName: 'Lunch (1:30 PM)',
+            time: '13:30',
+            foods: [
+              { foodName: 'Whole Wheat Roti', quantity: '3 rotis', calories: 255, protein: 9, carbs: 52, fats: 1 },
+              { foodName: 'Chicken Breast Curry / Paneer Bhurji', quantity: '1 katori', calories: 260, protein: 28, carbs: 6, fats: 12 },
+              { foodName: 'Yellow Moong Dal', quantity: '1 katori', calories: 145, protein: 8, carbs: 20, fats: 3 },
+            ],
+          },
+          {
+            mealName: 'Evening Pre-Workout (5:30 PM)',
+            time: '17:30',
+            foods: [
+              { foodName: 'Fresh Banana & Black Coffee', quantity: '1 banana', calories: 105, protein: 1, carbs: 27, fats: 0 },
+            ],
+          },
+          {
+            mealName: 'Dinner (8:30 PM)',
+            time: '20:30',
+            foods: [
+              { foodName: 'Steamed Brown Rice', quantity: '1 cup', calories: 185, protein: 5, carbs: 39, fats: 2 },
+              { foodName: 'Tandoori Chicken Tikka / Soya Chunks', quantity: '150g', calories: 240, protein: 32, carbs: 4, fats: 9 },
+            ],
+          },
+        ],
+        notes: 'Drink at least 1 glass of water every 2 hours. Keep sodium moderate.',
+        status: 'APPROVED',
+        approvedByNutritionistId: ipNutritionistUser._id,
+        approvedAt: new Date(),
+        isActive: true,
+      });
+
+      // Water log
+      await WaterLog.create({
+        tenantId: ironPulseTenant._id,
+        memberId: firstIronPulseMember._id,
+        amountLiters: 2.8,
+        date: new Date(),
+      });
+
+      // Assessments with milestones & before/after photos
+      await Assessment.create({
+        tenantId: ironPulseTenant._id,
+        memberId: firstIronPulseMember._id,
+        conductedByTrainerId: ipTrainerUser._id,
+        date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+        weightKg: 84.5,
+        heightCm: 178,
+        bmi: 26.7,
+        bodyFatPercent: 22.5,
+        muscleMassKg: 38.0,
+        chestCm: 102,
+        waistCm: 88,
+        armsCm: 36,
+        notes: 'Baseline initial fitness assessment.',
+        photos: [
+          { url: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80', type: 'FRONT' },
+          { url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80', type: 'SIDE' },
+        ],
+        goals: [
+          { goalType: 'Weight Reduction', targetValue: 79, achieved: false, milestoneBadge: 'Goal: 79kg' },
+          { goalType: 'Bench Press', targetValue: 80, achieved: true, milestoneBadge: '80kg Club' },
+        ],
+      });
+
+      await Assessment.create({
+        tenantId: ironPulseTenant._id,
+        memberId: firstIronPulseMember._id,
+        conductedByTrainerId: ipTrainerUser._id,
+        date: new Date(), // today
+        weightKg: 80.2,
+        heightCm: 178,
+        bmi: 25.3,
+        bodyFatPercent: 18.2,
+        muscleMassKg: 39.8,
+        chestCm: 105,
+        waistCm: 82,
+        armsCm: 38,
+        notes: 'Impressive progress! Waist decreased by 6cm while muscle mass increased by 1.8kg.',
+        photos: [
+          { url: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80', type: 'FRONT' },
+          { url: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80', type: 'SIDE' },
+        ],
+        goals: [
+          { goalType: 'Weight Reduction', targetValue: 79, achieved: false, milestoneBadge: 'Goal: 79kg' },
+          { goalType: 'Bench Press', targetValue: 80, achieved: true, milestoneBadge: '80kg Club' },
+          { goalType: 'Sub-20 Body Fat', targetValue: 20, achieved: true, milestoneBadge: 'Lean Physique' },
+        ],
+      });
+    }
+
     console.log('============================================================');
-    console.log('PHASE 2 COMPREHENSIVE SEED COMPLETED SUCCESSFULLY!');
+    console.log('PHASE 3 COMPREHENSIVE CRM & FITNESS SEED COMPLETED!');
     console.log('============================================================');
-    console.log('Total Tenants:   2 (IronPulse Mumbai, PowerFit Bengaluru)');
-    console.log('Total Branches:  3 (Bandra West, Andheri East, Indiranagar)');
-    console.log('Total Members:   200 seeded with Memberships, Invoices & Attendance');
-    console.log('');
-    console.log('Platform Super Admin:');
-    console.log('  Email:    admin@techofay.com');
-    console.log('  Password: Password@123');
-    console.log('');
-    console.log('IronPulse Gym Owner (Mumbai):');
-    console.log('  Subdomain: ironpulse');
-    console.log('  Email:     owner@ironpulse.com');
-    console.log('  Password:  Password@123');
-    console.log('');
-    console.log('PowerFit Gym Owner (Bengaluru):');
-    console.log('  Subdomain: powerfit');
-    console.log('  Email:     owner@powerfit.com');
-    console.log('  Password:  Password@123');
+    console.log('CRM Leads:        10 across all 7 stages (Hot/Warm/Cold, Activities, Lost reasons)');
+    console.log('Exercise Library: 150+ Exercises with muscle groups, instructions, equipment');
+    console.log('Food Database:    300+ Indian Foods with calories, protein, carbs, fats');
+    console.log('Classes & Trials: Group classes with atomic capacity & waitlists');
+    console.log('Trainers & PT:    Trainer profile, PT packages, commissions, ratings');
+    console.log('Fitness & Diets:  Workouts, meal schedules, water logs, before/after assessments');
+    console.log('Engagement:       Attendance streaks, leaderboard, wallet ledger rewards');
     console.log('============================================================');
   });
 

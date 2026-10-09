@@ -14,6 +14,13 @@ export interface ITenant extends Document {
     brandColor?: string;
     logoUrl?: string;
   };
+  aiSettings?: {
+    enabled: boolean;
+    dailyLimit: number;
+    usageToday: number;
+    lastResetDate: string;
+    mode?: 'BASIC' | 'CLAUDE';
+  };
   contactEmail: string;
   contactPhone: string;
   trialEndsAt?: Date;
@@ -46,6 +53,13 @@ const TenantSchema = new Schema<ITenant>(
       gstin: { type: String, trim: true },
       brandColor: { type: String, default: '#10b981' },
       logoUrl: { type: String },
+    },
+    aiSettings: {
+      enabled: { type: Boolean, default: true },
+      dailyLimit: { type: Number, default: 100 },
+      usageToday: { type: Number, default: 0 },
+      lastResetDate: { type: String, default: '' },
+      mode: { type: String, enum: ['BASIC', 'CLAUDE'] },
     },
     contactEmail: { type: String, required: true, lowercase: true, trim: true },
     contactPhone: { type: String, required: true, trim: true },

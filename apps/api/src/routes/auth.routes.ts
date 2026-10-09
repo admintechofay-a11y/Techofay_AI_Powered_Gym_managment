@@ -8,13 +8,31 @@ import {
 } from '@gymos/shared';
 import { AuthService } from '../services/authService.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authRateLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
-// 1. Register Tenant
-router.post('/register', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Helper to normalize registration input
+const handleRegister = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const input = registerTenantSchema.parse(req.body);
+    const rawBody = req.body || {};
+    let rawPhone = String(rawBody.phone || rawBody.ownerPhone || '').replace(/[\s\-()]/g, '');
+    if (/^[6-9]\d{9}$/.test(rawPhone)) {
+      rawPhone = `+91${rawPhone}`;
+    }
+
+    const normalized = {
+      ...rawBody,
+      gymName: rawBody.gymName || rawBody.name,
+      subdomain: rawBody.subdomain || rawBody.slug,
+      email: (rawBody.email || rawBody.ownerEmail || '').toLowerCase().trim(),
+      phone: rawPhone,
+      ownerName: rawBody.ownerName,
+      branchName: rawBody.branchName || 'Main Branch',
+      city: rawBody.city || 'Mumbai',
+    };
+
+    const input = registerTenantSchema.parse(normalized);
     const result = await AuthService.registerTenant(input, {
       ipAddress: req.ip || '127.0.0.1',
       userAgent: req.headers['user-agent'] || 'Unknown',
@@ -43,10 +61,14 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
   } catch (error) {
     next(error);
   }
-});
+};
+
+// 1. Register Tenant (support both /register and /register-tenant)
+router.post('/register', handleRegister);
+router.post('/register-tenant', handleRegister);
 
 // 2. Login
-router.post('/login', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.post('/login', authRateLimiter, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const input = loginSchema.parse(req.body);
     const subdomain = req.headers['x-tenant-subdomain'] as string | undefined;

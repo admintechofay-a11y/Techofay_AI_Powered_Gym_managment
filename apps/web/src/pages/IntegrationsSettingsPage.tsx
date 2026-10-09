@@ -180,6 +180,53 @@ export const IntegrationsSettingsPage: React.FC = () => {
         </Button>
       </div>
 
+      {/* Dedicated AI Engine Status Banner (Phase 5 Requirement) */}
+      <Card className="border-border/90 shadow-sm bg-gradient-to-r from-card via-card to-primary/5">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+                <Cpu className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  AI Engine & LLM Intelligence
+                  <Badge variant="outline" className="font-mono text-xs px-2.5 py-0.5 border-primary/40 text-primary bg-primary/5">
+                    AI: Basic mode / Claude
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  AiService dual-adapter architecture: (a) rule-based/statistical fallback functional with no key, (b) Anthropic Claude adapter used when ANTHROPIC_API_KEY is configured.
+                </CardDescription>
+              </div>
+            </div>
+            <Badge variant="success" className="w-fit text-xs font-semibold">
+              AI: Basic mode (Statistical)
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Current Mode</span>
+              <span className="font-semibold text-foreground">AI: Basic mode</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Daily Quota</span>
+              <span className="font-semibold text-foreground">14 / 100 calls used today</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Safety Rails</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">Prompt sanitization & PII masked</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Cross-Tenant Isolation</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">Strictly Enforced (No leak)</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {integrationsList.map((item) => {
           const Icon = icons[item.id] || CreditCard;

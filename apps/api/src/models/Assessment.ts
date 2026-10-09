@@ -6,6 +6,13 @@ export interface IAssessmentPhoto {
   type: 'FRONT' | 'SIDE' | 'BACK';
 }
 
+export interface IAssessmentGoal {
+  goalType: string;
+  targetValue: number;
+  achieved: boolean;
+  milestoneBadge?: string;
+}
+
 export interface IAssessment extends Document {
   tenantId: Types.ObjectId;
   memberId: Types.ObjectId;
@@ -23,6 +30,7 @@ export interface IAssessment extends Document {
   thighsCm?: number;
   notes?: string;
   photos: IAssessmentPhoto[];
+  goals: IAssessmentGoal[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +56,14 @@ const AssessmentSchema = new Schema<IAssessment>(
       {
         url: { type: String, required: true },
         type: { type: String, enum: ['FRONT', 'SIDE', 'BACK'], required: true },
+      },
+    ],
+    goals: [
+      {
+        goalType: { type: String, required: true },
+        targetValue: { type: Number, required: true },
+        achieved: { type: Boolean, default: false },
+        milestoneBadge: { type: String },
       },
     ],
   },

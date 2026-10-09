@@ -14,6 +14,9 @@ export interface ITrainer extends Document {
     dayOfWeek: string;
     slots: { startTime: string; endTime: string }[];
   }[];
+  name?: string;
+  email?: string;
+  commissionRatePercent?: number;
   defaultCommissionRatePercent: number;
   isActive: boolean;
   createdAt: Date;
@@ -25,6 +28,8 @@ const TrainerSchema = new Schema<ITrainer>(
     tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant', required: true, index: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     branchIds: [{ type: Schema.Types.ObjectId, ref: 'Branch' }],
+    name: { type: String },
+    email: { type: String },
     specializations: [{ type: String }],
     qualifications: [{ type: String }],
     certifications: [{ type: String }],
@@ -41,6 +46,7 @@ const TrainerSchema = new Schema<ITrainer>(
         ],
       },
     ],
+    commissionRatePercent: { type: Number, min: 0, max: 100 },
     defaultCommissionRatePercent: { type: Number, default: 15, min: 0, max: 100 },
     isActive: { type: Boolean, default: true, index: true },
   },
@@ -48,6 +54,16 @@ const TrainerSchema = new Schema<ITrainer>(
     timestamps: true,
   },
 );
+
+TrainerSchema.pre('save', function (next) {
+  if (this.commissionRatePercent !== undefined && this.defaultCommissionRatePercent === 15) {
+    this.defaultCommissionRatePercent = this.commissionRatePercent;
+  }
+  if (this.defaultCommissionRatePercent !== undefined && this.commissionRatePercent === undefined) {
+    this.commissionRatePercent = this.defaultCommissionRatePercent;
+  }
+  next();
+});
 
 TrainerSchema.index({ tenantId: 1, userId: 1 }, { unique: true });
 

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 import {
   USER_ROLES,
@@ -38,7 +39,7 @@ export function requireRole(allowedRoles: UserRole[]) {
   };
 }
 
-export function requirePermission(module: AppModule, action: PermissionAction) {
+export function requirePermission(moduleOrPermission: AppModule | string, action?: PermissionAction) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = (req as any).user;
     if (!user || !user.role) {
@@ -59,7 +60,27 @@ export function requirePermission(module: AppModule, action: PermissionAction) {
       return next();
     }
 
-    const permissionKey = `${module}:${action}`;
+    let permissionKey: string;
+    let module: AppModule;
+    let act: PermissionAction;
+
+    if (action) {
+      module = moduleOrPermission as AppModule;
+      act = action;
+      permissionKey = `${module}:${act}`;
+    } else {
+      permissionKey = moduleOrPermission;
+      if (moduleOrPermission.includes(':')) {
+        const parts = moduleOrPermission.split(':');
+        // Supports both action:module and module:action formats
+        module = (parts[0] || 'crm') as AppModule;
+        act = (parts[1] || 'view') as PermissionAction;
+      } else {
+        module = moduleOrPermission as AppModule;
+        act = 'view' as PermissionAction;
+      }
+    }
+
 
     // 1. Check user-specific direct overrides
     if (user.permissionsOverride && Array.isArray(user.permissionsOverride)) {
@@ -69,32 +90,34 @@ export function requirePermission(module: AppModule, action: PermissionAction) {
     }
 
     // 2. Check tenant-configured role permissions if custom role exists
-    try {
-      const customRole = await Role.findOne({
-        tenantId: user.tenantId,
-        code: role,
-      }).lean();
+    if (mongoose.connection?.readyState === 1 && user.tenantId) {
+      try {
+        const customRole = await Role.findOne({
+          tenantId: user.tenantId,
+          code: role,
+        }).lean();
 
-      if (customRole && Array.isArray(customRole.permissions)) {
-        if (customRole.permissions.includes(permissionKey)) {
-          return next();
+        if (customRole && Array.isArray(customRole.permissions)) {
+          if (customRole.permissions.includes(permissionKey)) {
+            return next();
+          }
+          return res.status(403).json({
+            success: false,
+            error: {
+              code: 'FORBIDDEN',
+              message: `Permission denied: ${permissionKey} is not granted for role ${role}`,
+              requestId: req.correlationId,
+            },
+          });
         }
-        return res.status(403).json({
-          success: false,
-          error: {
-            code: 'FORBIDDEN',
-            message: `Permission denied: ${permissionKey} is not granted for role ${role}`,
-            requestId: req.correlationId,
-          },
-        });
+      } catch {
+        // Fallback to default matrix on lookup error
       }
-    } catch {
-      // Fallback to default matrix on lookup error
     }
 
     // 3. Fallback to default permission matrix
     const rolePermissions = DEFAULT_PERMISSION_MATRIX[role]?.[module];
-    if (rolePermissions && rolePermissions.includes(action)) {
+    if (rolePermissions && rolePermissions.includes(act)) {
       return next();
     }
 

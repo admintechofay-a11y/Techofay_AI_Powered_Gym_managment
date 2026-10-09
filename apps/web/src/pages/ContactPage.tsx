@@ -73,7 +73,12 @@ export const ContactPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-base font-semibold text-foreground">Direct Sales Hotline</h3>
-                <p className="text-sm text-muted-foreground">+91 (022) 6982-4400 (Mon - Sat, 9am - 7pm IST)</p>
+                <p className="text-sm text-muted-foreground">
+                  <a href="tel:+912269824400" className="hover:text-primary transition-colors">
+                    +91 (022) 6982-4400
+                  </a>{' '}
+                  (Mon - Sat, 9am - 7pm IST)
+                </p>
               </div>
             </div>
 
@@ -83,7 +88,11 @@ export const ContactPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-base font-semibold text-foreground">Sales & Support Email</h3>
-                <p className="text-sm text-muted-foreground">contact@techofay.com</p>
+                <p className="text-sm text-muted-foreground">
+                  <a href="mailto:contact@techofay.com" className="hover:text-primary transition-colors">
+                    contact@techofay.com
+                  </a>
+                </p>
               </div>
             </div>
           </div>

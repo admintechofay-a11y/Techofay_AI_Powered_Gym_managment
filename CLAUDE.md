@@ -77,14 +77,36 @@ CODE QUALITY RULES
   Playwright for flows. Cover auth, tenant isolation, RBAC, membership lifecycle, billing,
   attendance, booking concurrency, lead conversion.
 
-DESIGN RULES
-- Premium SaaS look: design tokens, light + dark mode, one accent colour, Plus Jakarta Sans
-  or Inter, 8px grid, subtle motion (respect prefers-reduced-motion), WCAG AA contrast,
-  full keyboard navigation, focus rings.
-- Staff app: collapsible sidebar + command palette (Ctrl+K). Member PWA: bottom navigation.
-- Public site: real product feel, real imagery from Unsplash with proper alt text, all
-  image URLs in one config file, consistent icon style. Compressed WebP/AVIF, lazy loaded,
-  explicit width/height.
+DESIGN RULES (reference: dark premium gym hero, "Iron.Bound" style)
+Take the style only. Do not copy the brand name, logo, copy or exact photos.
+
+Look and feel
+- Dark-first theme. Background near-black (#0A0A0A), surfaces #111 / #161616, 1px borders
+  rgba(255,255,255,0.08), text #F5F5F5, muted text #A1A1A1.
+- One accent: deep green (default #2E7D1E, hover #3A9A26). Accent is a CSS variable so each
+  tenant can white-label it. Light theme available as a toggle, dark is the default.
+- Font: Urbanist (or Outfit) for headings and body, loaded locally with next/font-style
+  self-hosting (no render-blocking Google Fonts request). Headlines large, light weight (300-400),
+  tight line height, generous spacing. Hero headline 56-72px desktop, 36-40px mobile.
+- Pill-shaped buttons (fully rounded). Primary = solid green. Secondary = outlined ghost,
+  with a play icon where it opens a video. Visible focus rings, hover and pressed states.
+- Navbar: slim, translucent with backdrop blur, logo left, links centered, outlined
+  "Sign In" and solid green "Sign Up" pills on the right. Collapses to a drawer on mobile.
+- Hero: full-bleed black-and-white athlete photo on the right, strong dark gradient on the
+  left so text is readable, headline + short paragraph + two pill buttons on the left.
+- Photography: all images graded consistently (dark, high contrast, mostly monochrome with
+  the green accent). Pre-process with sharp so they match. Generous rounded corners (16-24px)
+  on cards and image frames.
+- Sections: hero, stats strip (real numbers from the DB), facilities grid, membership plans
+  (cards, popular plan highlighted), trainers, class timetable, transformation gallery,
+  testimonials, FAQ, final CTA, footer. Smooth scroll-reveal animations (CSS or Framer Motion),
+  subtle parallax on hero image, all disabled under prefers-reduced-motion.
+- Dashboards and member PWA use the same tokens: dark default, green accent, same font,
+  same pill buttons, so the whole product feels like one brand.
+- Optional sponsor/partner strip: shows only if the tenant uploaded logos in admin, rendered
+  monochrome white. Hidden otherwise. Never ship third-party brand logos without an upload.
+- Accessibility: WCAG AA contrast (check green on black), keyboard navigation, alt text on
+  every image, video has captions and no autoplay with sound.
 
 LAUNCH CHECKLIST (verify on EVERY page, automate where possible)
 1. No horizontal scroll at 360, 390, 768, 1024, 1440px (Playwright asserts scrollWidth <= innerWidth).

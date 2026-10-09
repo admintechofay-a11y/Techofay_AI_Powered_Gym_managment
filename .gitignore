@@ -38,3 +38,5 @@ uploads/
 minio-data/
 mongo-data/
 redis-data/
+test-results/
+playwright-report/

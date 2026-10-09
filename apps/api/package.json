@@ -14,6 +14,7 @@
   "dependencies": {
     "@gymos/shared": "workspace:*",
     "argon2": "^0.41.1",
+    "bullmq": "^6.3.11",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

@@ -6,7 +6,7 @@ const jestBin = require.resolve('jest/bin/jest');
 
 const result = spawnSync(
   process.execPath,
-  ['--experimental-vm-modules', jestBin, '--runInBand', '--detectOpenHandles', '--forceExit'],
+  ['--experimental-vm-modules', jestBin, '--runInBand', '--detectOpenHandles', '--forceExit', ...process.argv.slice(2)],
   {
     stdio: 'inherit',
     env: {

@@ -135,3 +135,23 @@ Each adapter operates in **Demo Mode** by default when credentials are absent, p
   SMTP_PASS=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   SMTP_FROM="Techofay GymOS <billing@techofay.com>"
   ```
+
+---
+
+## 9. Media & Photography APIs (Unsplash, Pexels, Pixabay)
+- **Status:** Direct verified commercial URLs downloaded & processed locally into `/apps/web/public/images/` and `/apps/web/public/videos/`.
+- **Optional API Keys for Dynamic Tenant Uploads:**
+  - **Pexels:** [Pexels API Portal](https://www.pexels.com/api/) (Free key for 20,000 req/month)
+    ```env
+    PEXELS_API_KEY=your_free_pexels_api_key_here
+    ```
+  - **Unsplash:** [Unsplash Developer Portal](https://unsplash.com/developers) (Free key for 50 req/hour)
+    ```env
+    UNSPLASH_ACCESS_KEY=your_free_unsplash_access_key_here
+    ```
+  - **Pixabay:** [Pixabay API Documentation](https://pixabay.com/api/docs/) (Free key for 5,000 req/hour)
+    ```env
+    PIXABAY_API_KEY=your_free_pixabay_api_key_here
+    ```
+- **Fallback Behavior:** All 13 core gym shots and the training reel video are bundled and self-hosted locally in WebP/AVIF formats under 200KB per file with full licensing documentation in `/docs/IMAGE_CREDITS.md`.
+

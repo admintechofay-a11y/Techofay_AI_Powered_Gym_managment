@@ -107,4 +107,6 @@ class IntegrationRegistry {
 }
 
 export const integrations = new IntegrationRegistry();
+export const integrationRegistry = integrations;
 export * from './interfaces.js';
+

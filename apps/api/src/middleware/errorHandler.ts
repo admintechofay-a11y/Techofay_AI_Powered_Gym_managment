@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import { Sentry } from '../config/sentry.js';
 
 export function errorHandler(
   err: any,
@@ -83,6 +84,14 @@ export function errorHandler(
     statusCode === 500
       ? 'An unexpected internal server error occurred. Please try again.'
       : err.message || 'Error processing request';
+
+  if (statusCode === 500) {
+    Sentry.captureException(err, {
+      requestId,
+      path: req.path,
+      method: req.method,
+    });
+  }
 
   return res.status(statusCode).json({
     success: false,

@@ -6,3 +6,14 @@ export * from './membership.schema.js';
 export * from './attendance.schema.js';
 export * from './billing.schema.js';
 export * from './lead.schema.js';
+export * from './booking.schema.js';
+export * from './trainer.schema.js';
+export * from './workout.schema.js';
+export * from './nutrition.schema.js';
+export * from './assessment.schema.js';
+export * from './engagement.schema.js';
+export * from './communication.schema.js';
+export * from './marketing.schema.js';
+export * from './analytics.schema.js';
+export * from './saas.schema.js';
+

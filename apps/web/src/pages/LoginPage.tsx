@@ -32,10 +32,25 @@ export const LoginPage: React.FC = () => {
       });
 
       if (!res.success) {
-        if (res.error?.code === 'MFA_REQUIRED') {
+        const errCode = res.error?.code;
+        const errMsg = res.error?.message || '';
+        if (
+          errCode === 'MFA_REQUIRED' ||
+          errCode === 'TOTP_REQUIRED' ||
+          errMsg.toLowerCase().includes('2fa') ||
+          errMsg.toLowerCase().includes('totp')
+        ) {
           setRequires2FA(true);
+          setErrorMessage('Two-Factor Authentication is enabled. Please enter your 6-digit TOTP code below.');
         } else {
-          setErrorMessage(res.error?.message || 'Invalid credentials');
+          let msg = errMsg || 'Invalid credentials';
+          if (res.error?.details && typeof res.error.details === 'object') {
+            const detailMsgs = Object.entries(res.error.details)
+              .map(([f, errs]) => `${f}: ${Array.isArray(errs) ? errs.join(', ') : errs}`)
+              .join(' | ');
+            if (detailMsgs) msg = `${msg} (${detailMsgs})`;
+          }
+          setErrorMessage(msg);
         }
         setIsLoading(false);
         return;
@@ -51,22 +66,26 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (role: 'OWNER' | 'RECEPTIONIST' | 'TRAINER') => {
+  const handleQuickFill = (role: 'OWNER' | 'RECEPTIONIST' | 'TRAINER' | 'SUPER_ADMIN') => {
     if (role === 'OWNER') {
-      setEmail('owner@powerfit.in');
-      setPassword('Admin@12345');
+      setEmail('owner@ironpulse.com');
+      setPassword('Password@123');
     } else if (role === 'RECEPTIONIST') {
-      setEmail('reception@powerfit.in');
-      setPassword('Staff@12345');
+      setEmail('reception@ironpulse.com');
+      setPassword('Password@123');
+    } else if (role === 'TRAINER') {
+      setEmail('trainer@ironpulse.com');
+      setPassword('Password@123');
     } else {
-      setEmail('trainer.rahul@powerfit.in');
-      setPassword('Staff@12345');
+      setEmail('admin@techofay.com');
+      setPassword('Password@123');
     }
+    setRequires2FA(false);
     setErrorMessage(null);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 sm:py-12 relative overflow-hidden">
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-500/10 blur-[100px] pointer-events-none rounded-full" />
 
       <Card className="w-full max-w-md border-border/80 shadow-2xl relative z-10 bg-card">
@@ -80,7 +99,11 @@ export const LoginPage: React.FC = () => {
 
         <CardContent>
           {errorMessage && (
-            <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+            <div className={`mb-5 flex items-start gap-2.5 rounded-xl border p-3 text-xs ${
+              requires2FA
+                ? 'border-brand-500/30 bg-brand-500/10 text-brand-600 dark:text-brand-400'
+                : 'border-destructive/30 bg-destructive/10 text-destructive'
+            }`}>
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
@@ -92,7 +115,7 @@ export const LoginPage: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="owner@powerfit.in"
+              placeholder="owner@ironpulse.com"
               leftIcon={<Mail className="w-4 h-4" />}
               required
             />
@@ -122,6 +145,7 @@ export const LoginPage: React.FC = () => {
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value)}
                 placeholder="123456"
+                autoFocus
                 required
               />
             )}
@@ -132,42 +156,60 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* Quick Demo Fill Buttons */}
-          <div className="mt-6 pt-6 border-t border-border">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-              <span>Pre-seeded Demo Accounts:</span>
+          <div className="mt-6 pt-5 border-t border-border">
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-medium mb-2.5">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+                <span>Quick Demo Credentials:</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">Password@123</span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               <button
                 type="button"
                 onClick={() => handleQuickFill('OWNER')}
-                className="rounded-lg border border-border bg-muted/40 p-2 text-center text-xs font-medium hover:bg-muted transition-colors"
+                className="rounded-lg border border-border bg-muted/40 p-2 text-center text-[11px] font-semibold hover:bg-muted transition-colors text-foreground"
               >
                 Owner
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickFill('RECEPTIONIST')}
-                className="rounded-lg border border-border bg-muted/40 p-2 text-center text-xs font-medium hover:bg-muted transition-colors"
+                className="rounded-lg border border-border bg-muted/40 p-2 text-center text-[11px] font-semibold hover:bg-muted transition-colors text-foreground"
               >
                 Reception
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickFill('TRAINER')}
-                className="rounded-lg border border-border bg-muted/40 p-2 text-center text-xs font-medium hover:bg-muted transition-colors"
+                className="rounded-lg border border-border bg-muted/40 p-2 text-center text-[11px] font-semibold hover:bg-muted transition-colors text-foreground"
               >
                 Trainer
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('SUPER_ADMIN')}
+                className="rounded-lg border border-border bg-muted/40 p-2 text-center text-[11px] font-semibold hover:bg-muted transition-colors text-foreground"
+              >
+                Super Admin
               </button>
             </div>
           </div>
         </CardContent>
 
-        <CardFooter className="justify-center border-t border-border py-4 text-xs text-muted-foreground">
-          Need a new gym workspace?{' '}
-          <Link to="/register" className="ml-1 text-primary font-semibold hover:underline">
-            Register your gym
-          </Link>
+        <CardFooter className="flex-col gap-2.5 border-t border-border py-4 text-xs text-muted-foreground text-center">
+          <div>
+            Need a new gym workspace?{' '}
+            <Link to="/register" className="ml-1 text-primary font-semibold hover:underline">
+              Register your gym
+            </Link>
+          </div>
+          <div>
+            Looking for member QR pass & workouts?{' '}
+            <Link to="/member-portal" className="text-brand-600 font-semibold hover:underline">
+              Open Member Digital Pass
+            </Link>
+          </div>
         </CardFooter>
       </Card>
     </div>

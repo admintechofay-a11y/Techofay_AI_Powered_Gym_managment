@@ -1,6 +1,7 @@
 {
   "name": "techofay-gymos",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "description": "Techofay GymOS - AI-Powered Multi-Tenant SaaS Gym Management Platform",
   "engines": {
@@ -17,6 +18,7 @@
     "typecheck": "pnpm -r --parallel typecheck",
     "test": "pnpm --filter @gymos/shared test && pnpm --filter @gymos/api test",
     "test:e2e": "pnpm --filter @gymos/web test:e2e",
+    "test:load": "node load-tests/smoke-runner.js",
     "seed": "pnpm --filter @gymos/api seed",
     "check:links": "tsx scripts/check-links.ts",
     "check:placeholders": "tsx scripts/check-placeholders.ts",
@@ -27,12 +29,14 @@
     "@commitlint/config-conventional": "^19.7.1",
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.9",
+    "@types/sharp": "^0.32.0",
     "concurrently": "^9.1.2",
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.0.2",
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "prettier": "^3.5.3",
+    "sharp": "^0.35.5",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.0"
@@ -42,7 +46,8 @@
       "@scarf/scarf",
       "argon2",
       "esbuild",
-      "mongodb-memory-server"
+      "mongodb-memory-server",
+      "msgpackr-extract"
     ]
   }
 }

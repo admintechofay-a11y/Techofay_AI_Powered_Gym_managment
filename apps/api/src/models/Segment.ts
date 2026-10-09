@@ -1,18 +1,26 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 import { tenantIsolationPlugin } from '../plugins/tenantIsolationPlugin.js';
 
+export interface ISegmentCriteria {
+  membershipStatus?: string[];
+  minAttendance?: number;
+  maxAttendance?: number;
+  minAge?: number;
+  maxAge?: number;
+  branchId?: Types.ObjectId;
+  minSpendInPaise?: number;
+  maxSpendInPaise?: number;
+  inactivityDays?: number;
+  fitnessGoals?: string[];
+  leadStatus?: string[];
+  tags?: string[];
+}
+
 export interface ISegment extends Document {
   tenantId: Types.ObjectId;
   name: string;
   description?: string;
-  criteria: {
-    membershipStatus?: string[];
-    lastAttendedDaysAgo?: number;
-    minSpendInPaise?: number;
-    maxSpendInPaise?: number;
-    leadStatus?: string[];
-    tags?: string[];
-  };
+  criteria: ISegmentCriteria;
   estimatedCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -25,9 +33,15 @@ const SegmentSchema = new Schema<ISegment>(
     description: { type: String },
     criteria: {
       membershipStatus: [{ type: String }],
-      lastAttendedDaysAgo: { type: Number },
+      minAttendance: { type: Number },
+      maxAttendance: { type: Number },
+      minAge: { type: Number },
+      maxAge: { type: Number },
+      branchId: { type: Schema.Types.ObjectId, ref: 'Branch' },
       minSpendInPaise: { type: Number },
       maxSpendInPaise: { type: Number },
+      inactivityDays: { type: Number },
+      fitnessGoals: [{ type: String }],
       leadStatus: [{ type: String }],
       tags: [{ type: String }],
     },

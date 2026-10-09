@@ -21,6 +21,17 @@ export interface ILead extends Document {
   tags: string[];
   notes?: string;
   leadScore: LeadScore;
+  aiScoreDetails?: {
+    numericalScore: number;
+    factors: string[];
+    recommendedAction: string;
+    suggestedMessage?: string;
+    calculatedAt: Date;
+  };
+  lostReason?: string;
+  followUpDate?: Date;
+  lastContactedAt?: Date;
+  mergedIntoLeadId?: Types.ObjectId;
   convertedMemberId?: Types.ObjectId;
   isDeleted: boolean;
   deletedAt?: Date;
@@ -57,6 +68,17 @@ const LeadSchema = new Schema<ILead>(
       default: LEAD_SCORE.WARM,
       required: true,
     },
+    aiScoreDetails: {
+      numericalScore: { type: Number, min: 0, max: 100 },
+      factors: [{ type: String }],
+      recommendedAction: { type: String },
+      suggestedMessage: { type: String },
+      calculatedAt: { type: Date },
+    },
+    lostReason: { type: String },
+    followUpDate: { type: Date },
+    lastContactedAt: { type: Date },
+    mergedIntoLeadId: { type: Schema.Types.ObjectId, ref: 'Lead' },
     convertedMemberId: { type: Schema.Types.ObjectId, ref: 'Member' },
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date },
@@ -69,6 +91,7 @@ const LeadSchema = new Schema<ILead>(
 LeadSchema.index({ tenantId: 1, phone: 1 });
 LeadSchema.index({ tenantId: 1, pipelineStatus: 1 });
 LeadSchema.index({ tenantId: 1, branchId: 1, createdAt: -1 });
+LeadSchema.index({ tenantId: 1, followUpDate: 1 });
 
 LeadSchema.plugin(tenantIsolationPlugin);
 

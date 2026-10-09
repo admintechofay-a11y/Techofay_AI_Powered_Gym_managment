@@ -8,6 +8,9 @@ export interface IMembership extends Document {
   memberId: Types.ObjectId;
   planId: Types.ObjectId;
   invoiceId?: Types.ObjectId;
+  assignedTrainerId?: Types.ObjectId;
+  sessionsRemaining?: number;
+  sessionsUsed?: number;
   startDate: Date;
   endDate: Date;
   status: MembershipStatus;
@@ -27,6 +30,9 @@ const MembershipSchema = new Schema<IMembership>(
     memberId: { type: Schema.Types.ObjectId, ref: 'Member', required: true, index: true },
     planId: { type: Schema.Types.ObjectId, ref: 'Plan', required: true, index: true },
     invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice' },
+    assignedTrainerId: { type: Schema.Types.ObjectId, ref: 'User' },
+    sessionsRemaining: { type: Number, default: 0, min: 0 },
+    sessionsUsed: { type: Number, default: 0, min: 0 },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true, index: true },
     status: {
@@ -49,6 +55,7 @@ const MembershipSchema = new Schema<IMembership>(
 
 MembershipSchema.index({ tenantId: 1, memberId: 1, status: 1 });
 MembershipSchema.index({ tenantId: 1, endDate: 1 });
+MembershipSchema.index({ tenantId: 1, assignedTrainerId: 1, status: 1 });
 
 MembershipSchema.plugin(tenantIsolationPlugin);
 
