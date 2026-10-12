@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Send,
   Clock,
@@ -30,6 +30,7 @@ import { Badge } from '../components/ui/Badge.js';
 import { Input } from '../components/ui/Input.js';
 import { Modal } from '../components/ui/Modal.js';
 import { useToast } from '../components/ui/Toast.js';
+import { api } from '../services/api.js';
 
 interface ScheduledJobItem {
   id: string;
@@ -85,10 +86,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '0 8 * * * (Daily at 08:00 AM)',
     category: 'EXPIRY',
     status: 'WAITING',
-    lastRunAt: '2026-10-07 08:00:00',
-    nextRunAt: '2026-10-08 08:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{member}:EXPIRY_7D:{date}',
-    lastStats: { processed: 18, sent: 18, skipped: 0 },
   },
   {
     id: 'job-2',
@@ -97,10 +95,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '0 8 * * * (Daily at 08:00 AM)',
     category: 'EXPIRY',
     status: 'WAITING',
-    lastRunAt: '2026-10-07 08:00:00',
-    nextRunAt: '2026-10-08 08:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{member}:EXPIRY_3D:{date}',
-    lastStats: { processed: 9, sent: 9, skipped: 0 },
   },
   {
     id: 'job-3',
@@ -109,10 +104,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '0 8 * * * (Daily at 08:00 AM)',
     category: 'EXPIRY',
     status: 'WAITING',
-    lastRunAt: '2026-10-07 08:00:00',
-    nextRunAt: '2026-10-08 08:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{member}:EXPIRY_1D:{date}',
-    lastStats: { processed: 4, sent: 4, skipped: 0 },
   },
   {
     id: 'job-4',
@@ -120,11 +112,8 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     description: 'Midnight transition to EXPIRED and notification on expiration date',
     cronExpression: '0 0 * * * (Daily at 12:00 AM)',
     category: 'EXPIRY',
-    status: 'COMPLETED',
-    lastRunAt: '2026-10-07 00:00:00',
-    nextRunAt: '2026-10-08 00:00:00',
+    status: 'WAITING',
     dedupeKeyPattern: 'notif:{tenant}:{member}:EXPIRY_TODAY:{date}',
-    lastStats: { processed: 6, sent: 6, skipped: 0 },
   },
   {
     id: 'job-5',
@@ -133,10 +122,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '0 10 * * * (Daily at 10:00 AM)',
     category: 'EXPIRY',
     status: 'WAITING',
-    lastRunAt: '2026-10-06 10:00:00',
-    nextRunAt: '2026-10-07 10:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{member}:RENEWAL_PERK:{date}',
-    lastStats: { processed: 12, sent: 12, skipped: 0 },
   },
   {
     id: 'job-6',
@@ -145,10 +131,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '0 9 * * * (Daily at 09:00 AM)',
     category: 'BILLING',
     status: 'WAITING',
-    lastRunAt: '2026-10-07 09:00:00',
-    nextRunAt: '2026-10-08 09:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{member}:PAYMENT_DUE:{invoice}:{date}',
-    lastStats: { processed: 8, sent: 8, skipped: 0 },
   },
   {
     id: 'job-7',
@@ -156,11 +139,8 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     description: 'Auto-detects birthdays, generates BDAY coupon (20% off) & dispatches wishes',
     cronExpression: '0 8 * * * (Daily at 08:00 AM)',
     category: 'LIFECYCLE',
-    status: 'COMPLETED',
-    lastRunAt: '2026-10-07 08:00:00',
-    nextRunAt: '2026-10-08 08:00:00',
+    status: 'WAITING',
     dedupeKeyPattern: 'notif:{tenant}:{member}:BIRTHDAY:{year}',
-    lastStats: { processed: 3, sent: 3, skipped: 0 },
   },
   {
     id: 'job-8',
@@ -168,11 +148,8 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     description: 'Auto-detects membership anniversaries, generates ANNIV coupon (15% off) & sends wishes',
     cronExpression: '0 8 * * * (Daily at 08:00 AM)',
     category: 'LIFECYCLE',
-    status: 'COMPLETED',
-    lastRunAt: '2026-10-07 08:00:00',
-    nextRunAt: '2026-10-08 08:00:00',
+    status: 'WAITING',
     dedupeKeyPattern: 'notif:{tenant}:{member}:ANNIVERSARY:{year}',
-    lastStats: { processed: 2, sent: 2, skipped: 0 },
   },
   {
     id: 'job-9',
@@ -181,10 +158,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '0 9 * * * (Daily at 09:00 AM)',
     category: 'ENGAGEMENT',
     status: 'WAITING',
-    lastRunAt: '2026-10-07 09:00:00',
-    nextRunAt: '2026-10-08 09:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{trial}:TRIAL_REMINDER:{date}',
-    lastStats: { processed: 5, sent: 5, skipped: 0 },
   },
   {
     id: 'job-10',
@@ -193,10 +167,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '*/30 * * * * (Every 30 minutes)',
     category: 'ENGAGEMENT',
     status: 'WAITING',
-    lastRunAt: '2026-10-07 14:30:00',
-    nextRunAt: '2026-10-07 15:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{booking}:APT_REMINDER',
-    lastStats: { processed: 7, sent: 7, skipped: 0 },
   },
   {
     id: 'job-11',
@@ -205,10 +176,7 @@ const INITIAL_JOBS: ScheduledJobItem[] = [
     cronExpression: '0 11 * * * (Daily at 11:00 AM)',
     category: 'ENGAGEMENT',
     status: 'WAITING',
-    lastRunAt: '2026-10-07 11:00:00',
-    nextRunAt: '2026-10-08 11:00:00',
     dedupeKeyPattern: 'notif:{tenant}:{member}:INACTIVITY:{date}',
-    lastStats: { processed: 14, sent: 14, skipped: 0 },
   },
 ];
 
@@ -291,63 +259,7 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
   },
 ];
 
-const INITIAL_LOGS: CommunicationLogItem[] = [
-  {
-    id: 'log-1',
-    recipientName: 'Vikram Malhotra',
-    recipientContact: '+91 98111 22233',
-    channel: 'WHATSAPP',
-    title: 'Happy Birthday, Vikram! 🎂',
-    message: 'Wishing you a very Happy Birthday from IronPulse! Use coupon *BDAY-MEM-COMM-001-2026* for 20% discount.',
-    type: 'BIRTHDAY',
-    status: 'DELIVERED',
-    isSimulated: true,
-    dedupeKey: 'notif:tenant:mem1:BIRTHDAY:2026',
-    sentAt: '2026-10-07 08:00:15',
-    deliveredAt: '2026-10-07 08:00:18',
-  },
-  {
-    id: 'log-2',
-    recipientName: 'Aarav Patel',
-    recipientContact: '+91 98200 44556',
-    channel: 'SMS',
-    title: 'Payment Reminder: ₹4,500 Outstanding',
-    message: 'Dear Aarav, invoice INV-2026-27-0042 has a pending balance of ₹4,500. Pay online to avoid late fees.',
-    type: 'PAYMENT',
-    status: 'DELIVERED',
-    isSimulated: true,
-    dedupeKey: 'notif:tenant:mem2:PAYMENT_DUE:INV-0042:2026-10-07',
-    sentAt: '2026-10-07 09:00:22',
-    deliveredAt: '2026-10-07 09:00:24',
-  },
-  {
-    id: 'log-3',
-    recipientName: 'Sneha Rao',
-    recipientContact: 'sneha.rao@gmail.com',
-    channel: 'EMAIL',
-    title: 'Your Annual Membership Expires in 3 Days',
-    message: 'Hi Sneha, your annual plan expires on 10/10/2026. Renew today to lock in existing tier rates.',
-    type: 'EXPIRY',
-    status: 'SENT',
-    isSimulated: false,
-    dedupeKey: 'notif:tenant:mem3:EXPIRY_3D:2026-10-07',
-    sentAt: '2026-10-07 08:00:30',
-  },
-  {
-    id: 'log-4',
-    recipientName: 'Rohan Mehra',
-    recipientContact: '+91 98222 33445',
-    channel: 'WHATSAPP',
-    title: 'Your Free Trial Session is Tomorrow! 🏋️',
-    message: 'Hi Rohan, we are excited to see you tomorrow for your Olympic lifting trial session at IronPulse.',
-    type: 'REMINDER',
-    status: 'DELIVERED',
-    isSimulated: true,
-    dedupeKey: 'notif:tenant:trial1:TRIAL_REMINDER:2026-10-07',
-    sentAt: '2026-10-07 09:00:12',
-    deliveredAt: '2026-10-07 09:00:15',
-  },
-];
+const INITIAL_LOGS: CommunicationLogItem[] = [];
 
 export const CommunicationPage: React.FC = () => {
   const { addToast } = useToast();
@@ -374,16 +286,31 @@ export const CommunicationPage: React.FC = () => {
   const [startHour, setStartHour] = useState(21);
   const [endHour, setEndHour] = useState(8);
 
-  // 1-Click trigger scheduled job
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await api.get('/communication/history');
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setLogs(res.data);
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  // 1-Click trigger scheduled job via BullMQ
   const handleTriggerJob = async (job: ScheduledJobItem) => {
     setRunningJobId(job.id);
     setJobs((prev) =>
       prev.map((j) => (j.id === job.id ? { ...j, status: 'RUNNING' } : j)),
     );
 
-    // Simulate execution latency
-    setTimeout(() => {
-      const sentCount = Math.floor(Math.random() * 8) + 2;
+    try {
+      const res = await api.post(`/communication/jobs/${encodeURIComponent(job.name)}/trigger`);
+      const sentCount = res.data?.processed ?? res.data?.sentCount ?? 1;
+
       setJobs((prev) =>
         prev.map((j) =>
           j.id === job.id
@@ -396,14 +323,30 @@ export const CommunicationPage: React.FC = () => {
             : j,
         ),
       );
-      setRunningJobId(null);
+
+      // Refresh logs
+      const historyRes = await api.get('/communication/history');
+      if (historyRes.success && Array.isArray(historyRes.data) && historyRes.data.length > 0) {
+        setLogs(historyRes.data);
+      }
 
       addToast({
         title: 'Job Completed Successfully',
-        message: `${job.name} processed ${sentCount} recipients. Zero duplicates sent (idempotent dedupe keys enforced).`,
+        message: `${job.name} processed ${sentCount} recipients via BullMQ queue. Zero duplicates sent (idempotent dedupe keys enforced).`,
         type: 'success',
       });
-    }, 1200);
+    } catch (err: any) {
+      setJobs((prev) =>
+        prev.map((j) => (j.id === job.id ? { ...j, status: 'FAILED' } : j)),
+      );
+      addToast({
+        title: 'Job Execution Failed',
+        message: err?.message || 'Failed to dispatch communication job.',
+        type: 'error',
+      });
+    } finally {
+      setRunningJobId(null);
+    }
   };
 
   const filteredLogs = logs.filter((log) => {
@@ -797,57 +740,65 @@ export const CommunicationPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-foreground">{log.recipientName}</div>
-                        <div className="text-xs text-muted-foreground font-mono">{log.recipientContact}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline">{log.channel}</Badge>
-                      </td>
-                      <td className="px-4 py-3 max-w-xs">
-                        <div className="font-medium text-foreground truncate">{log.title}</div>
-                        <div className="text-xs text-muted-foreground truncate">{log.message}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant={
-                            log.status === 'DELIVERED'
-                              ? 'default'
-                              : log.status === 'SENT'
-                                ? 'secondary'
-                                : 'outline'
-                          }
-                        >
-                          {log.status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        {log.isSimulated ? (
-                          <Badge variant="outline" className="border-amber-500/40 text-amber-600 bg-amber-500/10 text-[10px]">
-                            simulated
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 bg-emerald-500/10 text-[10px]">
-                            real SMTP / API
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
-                        {log.sentAt}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedLog(log)}
-                        >
-                          Details
-                        </Button>
+                  {filteredLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                        No communication logs recorded yet.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-foreground">{log.recipientName}</div>
+                          <div className="text-xs text-muted-foreground font-mono">{log.recipientContact}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline">{log.channel}</Badge>
+                        </td>
+                        <td className="px-4 py-3 max-w-xs">
+                          <div className="font-medium text-foreground truncate">{log.title}</div>
+                          <div className="text-xs text-muted-foreground truncate">{log.message}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant={
+                              log.status === 'DELIVERED'
+                                ? 'default'
+                                : log.status === 'SENT'
+                                  ? 'secondary'
+                                  : 'outline'
+                            }
+                          >
+                            {log.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          {log.isSimulated ? (
+                            <Badge variant="outline" className="border-amber-500/40 text-amber-600 bg-amber-500/10 text-[10px]">
+                              simulated
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 bg-emerald-500/10 text-[10px]">
+                              real SMTP / API
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
+                          {log.sentAt}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedLog(log)}
+                          >
+                            Details
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

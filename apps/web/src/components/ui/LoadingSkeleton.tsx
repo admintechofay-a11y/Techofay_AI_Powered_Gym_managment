@@ -46,3 +46,18 @@ export const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
     </div>
   );
 };
+export const LoadingSkeleton: React.FC<{ rows?: number; count?: number; className?: string }> = ({
+  rows = 4,
+  count,
+  className,
+}) => {
+  const n = count || rows;
+  return (
+    <div className={clsx('w-full space-y-4 py-4', className)}>
+      {Array.from({ length: n }).map((_, i) => (
+        <Skeleton key={i} className="h-16 w-full rounded-xl" />
+      ))}
+    </div>
+  );
+};
+

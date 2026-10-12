@@ -196,7 +196,10 @@ export class AuthService {
       }
     }
 
-    const user = await User.findOne(userQuery, null, { bypassTenantIsolation: true });
+    const user = await User.findOne(userQuery, null, {
+      bypassTenantIsolation: true,
+      sort: { _id: -1 },
+    });
 
     if (!user) {
       const err: any = new Error('Invalid email or password');

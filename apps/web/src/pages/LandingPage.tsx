@@ -244,7 +244,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-sm font-semibold text-white">Biometric Turnstile Feed #AW01</div>
-                        <div className="text-xs text-[#A1A1A1]">Last Punch: Rohan Sharma (MEM-2026-27-0142) • 2 sec ago • Granted</div>
+                        <div className="text-xs text-[#A1A1A1]">Live Punch: Member ID (IP-2026-0001) • Verified • Access Granted</div>
                       </div>
                     </div>
                     <span className="px-3 py-1 rounded-full bg-[#2E7D1E]/15 text-[#2E7D1E] text-xs font-semibold">
@@ -272,41 +272,41 @@ export const LandingPage: React.FC = () => {
                     <div className="p-3.5 rounded-xl bg-[#141414] border border-white/[0.06] space-y-2">
                       <div className="flex justify-between font-semibold text-white">
                         <span>New Enquiry</span>
-                        <span className="text-[#2E7D1E]">4</span>
+                        <span className="text-[#2E7D1E]">0</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-[#181818] border border-white/[0.04]">
-                        <div className="font-medium text-white">Aakash Verma</div>
-                        <div className="text-[10px] text-[#A1A1A1] mt-0.5">Walk-in • Weight Loss</div>
+                        <div className="font-medium text-white">Inbound Lead</div>
+                        <div className="text-[10px] text-[#A1A1A1] mt-0.5">Website Form • General Fitness</div>
                       </div>
                     </div>
                     <div className="p-3.5 rounded-xl bg-[#141414] border border-white/[0.06] space-y-2">
                       <div className="flex justify-between font-semibold text-white">
                         <span>Trial Scheduled</span>
-                        <span className="text-[#2E7D1E]">3</span>
+                        <span className="text-[#2E7D1E]">0</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-[#181818] border border-white/[0.04]">
-                        <div className="font-medium text-white">Simran Kaur</div>
-                        <div className="text-[10px] text-[#A1A1A1] mt-0.5">Tomorrow 07:00 AM</div>
+                        <div className="font-medium text-white">Trial Attendee</div>
+                        <div className="text-[10px] text-[#A1A1A1] mt-0.5">Slot Confirmed • 07:00 AM</div>
                       </div>
                     </div>
                     <div className="p-3.5 rounded-xl bg-[#141414] border border-white/[0.06] space-y-2">
                       <div className="flex justify-between font-semibold text-white">
                         <span>Trial Completed</span>
-                        <span className="text-[#2E7D1E]">2</span>
+                        <span className="text-[#2E7D1E]">0</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-[#181818] border border-white/[0.04]">
-                        <div className="font-medium text-white">Sameer Patel</div>
-                        <div className="text-[10px] text-amber-400 mt-0.5">High Conversion Prob.</div>
+                        <div className="font-medium text-white">Follow-up Scheduled</div>
+                        <div className="text-[10px] text-amber-400 mt-0.5">High Conversion Likelihood</div>
                       </div>
                     </div>
                     <div className="p-3.5 rounded-xl bg-[#141414] border border-white/[0.06] space-y-2">
                       <div className="flex justify-between font-semibold text-white">
                         <span>Won (Converted)</span>
-                        <span className="text-[#2E7D1E]">18</span>
+                        <span className="text-[#2E7D1E]">0</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-[#181818] border border-white/[0.04]">
-                        <div className="font-medium text-white">Rhea Joshi</div>
-                        <div className="text-[10px] text-[#2E7D1E] mt-0.5">Annual Pass ₹24,000</div>
+                        <div className="font-medium text-white">Member Enrolled</div>
+                        <div className="text-[10px] text-[#2E7D1E] mt-0.5">Invoice Issued • Active</div>
                       </div>
                     </div>
                   </div>
@@ -330,24 +330,24 @@ export const LandingPage: React.FC = () => {
                   <div className="p-5 rounded-xl bg-[#141414] border border-white/[0.06] space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-white font-semibold">AI Risk Category Breakdown</span>
-                      <span className="text-[#2E7D1E]">Predicted Accuracy: 94.2%</span>
+                      <span className="text-[#2E7D1E]">Operational Telemetry Active</span>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div className="p-3 rounded-lg bg-[#181818]">
-                        <div className="text-xs text-[#A1A1A1]">Safe (Active 4+ days/wk)</div>
-                        <div className="text-xl font-bold text-[#2E7D1E] mt-1">1,240 (88%)</div>
+                        <div className="text-xs text-[#A1A1A1]">Low Risk (Regular visits)</div>
+                        <div className="text-xl font-bold text-[#2E7D1E] mt-1">Active Members</div>
                       </div>
                       <div className="p-3 rounded-lg bg-[#181818]">
-                        <div className="text-xs text-[#A1A1A1]">Moderate Dip (1-2 days)</div>
-                        <div className="text-xl font-bold text-amber-400 mt-1">112 (8%)</div>
+                        <div className="text-xs text-[#A1A1A1]">Moderate Dip (Attendance lag)</div>
+                        <div className="text-xl font-bold text-amber-400 mt-1">Review Queue</div>
                       </div>
                       <div className="p-3 rounded-lg bg-[#181818]">
-                        <div className="text-xs text-[#A1A1A1]">High Risk (0 punches in 14d)</div>
-                        <div className="text-xl font-bold text-red-400 mt-1">48 (4%)</div>
+                        <div className="text-xs text-[#A1A1A1]">High Risk (Inactive 14d+)</div>
+                        <div className="text-xl font-bold text-red-400 mt-1">Retention Queue</div>
                       </div>
                     </div>
                     <div className="p-3 rounded-lg bg-[#2E7D1E]/10 text-xs text-[#F5F5F5] flex items-center justify-between">
-                      <span>Automated WhatsApp re-engagement trigger queued for 48 high-risk members.</span>
+                      <span>Automated WhatsApp re-engagement rules trigger on member attendance dropoff.</span>
                       <span className="text-[#2E7D1E] font-semibold">Auto-Trigger Enabled</span>
                     </div>
                   </div>
@@ -373,7 +373,7 @@ export const LandingPage: React.FC = () => {
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span>HMAC ANTI-PASSBACK SECURED</span>
                     </div>
-                    <div className="text-lg font-bold text-white">Arjun Kulkarni — Annual VIP Pass</div>
+                    <div className="text-lg font-bold text-white">Active Member — Digital Pass</div>
                     <div className="w-36 h-36 mx-auto bg-white p-3 rounded-2xl flex items-center justify-center">
                       <QrCode className="w-full h-full text-black" />
                     </div>
@@ -504,7 +504,7 @@ export const LandingPage: React.FC = () => {
             </Link>
             <Link to="/contact">
               <Button variant="secondary" size="lg">
-                Schedule Architecture Demo
+                Schedule Architecture Consultation
               </Button>
             </Link>
           </div>

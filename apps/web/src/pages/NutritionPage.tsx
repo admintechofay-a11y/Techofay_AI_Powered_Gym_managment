@@ -56,81 +56,12 @@ export interface DietPlanItem {
   }[];
 }
 
-const SAMPLE_INDIAN_FOODS: FoodItem[] = [
-  { id: 'f-1', name: 'Paneer Bhurji', category: 'Dairy & Plant Protein', servingSize: '1 cup (150g)', calories: 280, proteinGrams: 20.0, carbsGrams: 6.0, fatsGrams: 20.0 },
-  { id: 'f-2', name: 'Dal Tadka (Yellow Lentils)', category: 'Dals & Legumes', servingSize: '1 bowl (180g)', calories: 195, proteinGrams: 10.5, carbsGrams: 28.0, fatsGrams: 4.5 },
-  { id: 'f-3', name: 'Steamed Brown Rice', category: 'Breads & Grains', servingSize: '1 cup cooked (150g)', calories: 185, proteinGrams: 4.5, carbsGrams: 38.5, fatsGrams: 1.6 },
-  { id: 'f-4', name: 'Whole Wheat Phulka / Roti', category: 'Breads & Grains', servingSize: '1 roti (35g)', calories: 85, proteinGrams: 3.2, carbsGrams: 16.8, fatsGrams: 0.6 },
-  { id: 'f-5', name: 'Tandoori Chicken Breast', category: 'Poultry & Seafood', servingSize: '150g', calories: 230, proteinGrams: 38.0, carbsGrams: 2.0, fatsGrams: 7.5 },
-  { id: 'f-6', name: 'Steamed Idli with Sambar', category: 'South Indian Specials', servingSize: '2 idlis + sambar (200g)', calories: 210, proteinGrams: 7.0, carbsGrams: 42.0, fatsGrams: 2.0 },
-  { id: 'f-7', name: 'Sprouted Moong Salad', category: 'Salads & Sprouted Legumes', servingSize: '1 bowl (150g)', calories: 145, proteinGrams: 11.0, carbsGrams: 24.0, fatsGrams: 1.0 },
-  { id: 'f-8', name: 'Boiled Eggs (White Only)', category: 'Poultry & Seafood', servingSize: '3 egg whites (100g)', calories: 52, proteinGrams: 11.0, carbsGrams: 0.7, fatsGrams: 0.2 },
-];
-
-const INITIAL_DIET_PLANS: DietPlanItem[] = [
-  {
-    id: 'dp-1',
-    memberName: 'Aarav Nambiar',
-    memberCode: 'IP-FIT-001',
-    title: 'Clean Muscle Hypertrophy Meal Plan',
-    dailyCalorieTarget: 2500,
-    proteinGrams: 160,
-    carbsGrams: 280,
-    fatsGrams: 65,
-    waterIntakeLiters: 3.5,
-    status: 'APPROVED',
-    approvedByNutritionistName: 'Dr. Riya Sen (RD, Sports Nutrition)',
-    reviewNotes: 'Micronutrient balanced, verified protein bioavailability for heavy resistance training.',
-    meals: [
-      {
-        mealName: 'Breakfast (08:00 AM)',
-        time: '08:00',
-        foods: [
-          { foodName: 'Oats with Almond Milk & Whey', quantity: '1 bowl', calories: 420, protein: 32, carbs: 55, fats: 8 },
-          { foodName: 'Boiled Eggs (White Only)', quantity: '3 whites', calories: 52, protein: 11, carbs: 0.7, fats: 0.2 },
-        ],
-      },
-      {
-        mealName: 'Lunch (01:00 PM)',
-        time: '13:00',
-        foods: [
-          { foodName: 'Steamed Brown Rice', quantity: '1.5 cups', calories: 275, protein: 6.5, carbs: 58, fats: 2.4 },
-          { foodName: 'Paneer Bhurji', quantity: '1 cup', calories: 280, protein: 20, carbs: 6, fats: 20 },
-          { foodName: 'Dal Tadka (Yellow Lentils)', quantity: '1 bowl', calories: 195, protein: 10.5, carbs: 28, fats: 4.5 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'dp-2',
-    memberName: 'Kavita Iyer',
-    memberCode: 'IP-FIT-002',
-    title: 'Fat Loss & High Protein Vegetarian Schedule',
-    dailyCalorieTarget: 1750,
-    proteinGrams: 120,
-    carbsGrams: 180,
-    fatsGrams: 45,
-    waterIntakeLiters: 3.0,
-    status: 'PENDING_REVIEW',
-    reviewNotes: 'Submitted for nutritionist approval. Includes high fiber sprouted salads.',
-    meals: [
-      {
-        mealName: 'Lunch (01:00 PM)',
-        time: '13:00',
-        foods: [
-          { foodName: 'Whole Wheat Phulka / Roti', quantity: '2 rotis', calories: 170, protein: 6.4, carbs: 33.6, fats: 1.2 },
-          { foodName: 'Dal Tadka (Yellow Lentils)', quantity: '1 bowl', calories: 195, protein: 10.5, carbs: 28, fats: 4.5 },
-          { foodName: 'Sprouted Moong Salad', quantity: '1 bowl', calories: 145, protein: 11, carbs: 24, fats: 1 },
-        ],
-      },
-    ],
-  },
-];
+const INITIAL_DIET_PLANS: DietPlanItem[] = [];
 
 export const NutritionPage: React.FC = () => {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<'CALCULATOR' | 'FOODS' | 'PLANS' | 'WATER'>('CALCULATOR');
-  const [foods, setFoods] = useState<FoodItem[]>(SAMPLE_INDIAN_FOODS);
+  const [foods, setFoods] = useState<FoodItem[]>([]);
   const [plans, setPlans] = useState<DietPlanItem[]>(INITIAL_DIET_PLANS);
 
   // Search & Filters
@@ -148,7 +79,7 @@ export const NutritionPage: React.FC = () => {
   });
 
   // Water intake state
-  const [waterLoggedLiters, setWaterLoggedLiters] = useState(2.25);
+  const [waterLoggedLiters, setWaterLoggedLiters] = useState(0);
   const waterTargetLiters = 3.5;
 
   // Review Modal State
@@ -527,104 +458,110 @@ export const NutritionPage: React.FC = () => {
       {/* TAB 3: MEAL SCHEDULES & NUTRITIONIST APPROVAL */}
       {activeTab === 'PLANS' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4 flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">{plan.title}</h3>
-                    <p className="text-xs text-muted-foreground">Client: {plan.memberName} ({plan.memberCode})</p>
-                  </div>
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-bold ${
-                      plan.status === 'APPROVED'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                        : plan.status === 'PENDING_REVIEW'
-                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                        : 'bg-muted text-muted-foreground border border-border'
-                    }`}
-                  >
-                    {plan.status.replace('_', ' ')}
-                  </span>
-                </div>
-
-                {/* Macro summary pills */}
-                <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                  <div className="p-2 bg-muted/40 rounded-xl">
-                    <p className="text-muted-foreground">Calories</p>
-                    <p className="font-bold text-foreground">{plan.dailyCalorieTarget}</p>
-                  </div>
-                  <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400">
-                    <p className="opacity-80">Protein</p>
-                    <p className="font-bold">{plan.proteinGrams}g</p>
-                  </div>
-                  <div className="p-2 bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400">
-                    <p className="opacity-80">Carbs</p>
-                    <p className="font-bold">{plan.carbsGrams}g</p>
-                  </div>
-                  <div className="p-2 bg-purple-500/10 rounded-xl text-purple-600 dark:text-purple-400">
-                    <p className="opacity-80">Fats</p>
-                    <p className="font-bold">{plan.fatsGrams}g</p>
-                  </div>
-                </div>
-
-                {/* Meal Schedules */}
-                <div className="space-y-2 pt-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Scheduled Meals
-                  </h4>
-                  {plan.meals.map((m, idx) => (
-                    <div key={idx} className="p-3 bg-muted/30 rounded-xl border border-border/50 text-xs space-y-1.5">
-                      <div className="flex items-center justify-between font-semibold text-foreground">
-                        <span>{m.mealName}</span>
-                      </div>
-                      <div className="space-y-1 text-muted-foreground">
-                        {m.foods.map((food, fIdx) => (
-                          <div key={fIdx} className="flex justify-between">
-                            <span>• {food.foodName} ({food.quantity})</span>
-                            <span className="font-mono text-[11px]">{food.calories} kcal ({food.protein}g P)</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Review Notes */}
-                {plan.reviewNotes && (
-                  <div className="p-3 bg-muted/20 border border-border rounded-xl text-xs space-y-1">
-                    <p className="font-semibold text-foreground flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                      Nutritionist Notes {plan.approvedByNutritionistName ? `by ${plan.approvedByNutritionistName}` : ''}:
-                    </p>
-                    <p className="text-muted-foreground italic">{plan.reviewNotes}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Button */}
-              <div className="pt-4 border-t border-border flex justify-end gap-2">
-                {plan.status !== 'APPROVED' ? (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSelectedPlanForReview(plan);
-                      setReviewNotesInput(plan.reviewNotes || '');
-                    }}
-                  >
-                    Nutritionist Review
-                  </Button>
-                ) : (
-                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" /> Approved & Active
-                  </span>
-                )}
-              </div>
+          {plans.length === 0 ? (
+            <div className="col-span-full text-center py-16 bg-card rounded-2xl border border-dashed border-border text-muted-foreground">
+              No assigned meal schedules found. Create a plan or use the Macro Calculator.
             </div>
-          ))}
+          ) : (
+            plans.map((plan) => (
+              <div
+                key={plan.id}
+                className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4 flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg text-foreground">{plan.title}</h3>
+                      <p className="text-xs text-muted-foreground">Client: {plan.memberName} ({plan.memberCode})</p>
+                    </div>
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded-full font-bold ${
+                        plan.status === 'APPROVED'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                          : plan.status === 'PENDING_REVIEW'
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                          : 'bg-muted text-muted-foreground border border-border'
+                      }`}
+                    >
+                      {plan.status.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  {/* Macro summary pills */}
+                  <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                    <div className="p-2 bg-muted/40 rounded-xl">
+                      <p className="text-muted-foreground">Calories</p>
+                      <p className="font-bold text-foreground">{plan.dailyCalorieTarget}</p>
+                    </div>
+                    <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400">
+                      <p className="opacity-80">Protein</p>
+                      <p className="font-bold">{plan.proteinGrams}g</p>
+                    </div>
+                    <div className="p-2 bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400">
+                      <p className="opacity-80">Carbs</p>
+                      <p className="font-bold">{plan.carbsGrams}g</p>
+                    </div>
+                    <div className="p-2 bg-purple-500/10 rounded-xl text-purple-600 dark:text-purple-400">
+                      <p className="opacity-80">Fats</p>
+                      <p className="font-bold">{plan.fatsGrams}g</p>
+                    </div>
+                  </div>
+
+                  {/* Meal Schedules */}
+                  <div className="space-y-2 pt-2">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Scheduled Meals
+                    </h4>
+                    {plan.meals.map((m, idx) => (
+                      <div key={idx} className="p-3 bg-muted/30 rounded-xl border border-border/50 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between font-semibold text-foreground">
+                          <span>{m.mealName}</span>
+                        </div>
+                        <div className="space-y-1 text-muted-foreground">
+                          {m.foods.map((food, fIdx) => (
+                            <div key={fIdx} className="flex justify-between">
+                              <span>• {food.foodName} ({food.quantity})</span>
+                              <span className="font-mono text-[11px]">{food.calories} kcal ({food.protein}g P)</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Review Notes */}
+                  {plan.reviewNotes && (
+                    <div className="p-3 bg-muted/20 border border-border rounded-xl text-xs space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                        Nutritionist Notes {plan.approvedByNutritionistName ? `by ${plan.approvedByNutritionistName}` : ''}:
+                      </p>
+                      <p className="text-muted-foreground italic">{plan.reviewNotes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Button */}
+                <div className="pt-4 border-t border-border flex justify-end gap-2">
+                  {plan.status !== 'APPROVED' ? (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setSelectedPlanForReview(plan);
+                        setReviewNotesInput(plan.reviewNotes || '');
+                      }}
+                    >
+                      Nutritionist Review
+                    </Button>
+                  ) : (
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" /> Approved & Active
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 

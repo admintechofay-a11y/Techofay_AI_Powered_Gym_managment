@@ -113,8 +113,9 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const tenantId = (req as any).user.tenantId;
-      const { query, startDate, endDate, branchId } = req.body;
-      const result = await aiService.queryBusinessIntelligence(query, tenantId, {
+      const { query, question, startDate, endDate, branchId } = req.body;
+      const effectiveQuery = query || question;
+      const result = await aiService.queryBusinessIntelligence(effectiveQuery, tenantId, {
         startDate,
         endDate,
         branchId,

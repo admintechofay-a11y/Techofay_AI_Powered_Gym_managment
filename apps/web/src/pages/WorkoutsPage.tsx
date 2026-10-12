@@ -69,75 +69,6 @@ export interface WorkoutLogItem {
   notes?: string;
 }
 
-const SAMPLE_EXERCISES: ExerciseItem[] = [
-  {
-    id: 'ex-1',
-    name: 'Barbell Back Squat',
-    category: 'Strength',
-    targetMuscleGroup: 'Quads',
-    secondaryMuscles: ['Glutes', 'Hamstrings', 'Lower Back'],
-    difficulty: 'INTERMEDIATE',
-    equipmentRequired: 'Squat Rack & Olympic Barbell',
-    instructions: 'Place barbell across upper traps. Break at hips and knees simultaneously. Descend below parallel, keeping chest high, and drive up explosively.',
-    imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'ex-2',
-    name: 'Barbell Flat Bench Press',
-    category: 'Strength',
-    targetMuscleGroup: 'Chest',
-    secondaryMuscles: ['Triceps', 'Anterior Deltoids'],
-    difficulty: 'INTERMEDIATE',
-    equipmentRequired: 'Flat Bench & Barbell',
-    instructions: 'Lie on bench with eyes under barbell. Grip slightly wider than shoulder width. Lower bar to mid-sternum, elbows at 45 degrees, and press up to lockout.',
-    imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'ex-3',
-    name: 'Conventional Deadlift',
-    category: 'Strength',
-    targetMuscleGroup: 'Back',
-    secondaryMuscles: ['Hamstrings', 'Glutes', 'Forearms', 'Traps'],
-    difficulty: 'ADVANCED',
-    equipmentRequired: 'Olympic Barbell & Bumper Plates',
-    instructions: 'Stand mid-foot under barbell. Hinge at hips to grip bar. Pull slack out, brace core, and drive through heels while pulling hips forward.',
-    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'ex-4',
-    name: 'Overhead Standing Military Press',
-    category: 'Strength',
-    targetMuscleGroup: 'Shoulders',
-    secondaryMuscles: ['Triceps', 'Upper Chest', 'Core'],
-    difficulty: 'INTERMEDIATE',
-    equipmentRequired: 'Barbell',
-    instructions: 'Rest bar on front deltoids. Squeeze glutes and core. Press vertically overhead until arms lock out with head through the window.',
-    imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'ex-5',
-    name: 'Barbell Romanian Deadlift (RDL)',
-    category: 'Hypertrophy',
-    targetMuscleGroup: 'Hamstrings',
-    secondaryMuscles: ['Glutes', 'Lower Back'],
-    difficulty: 'INTERMEDIATE',
-    equipmentRequired: 'Barbell',
-    instructions: 'Unlock knees slightly and hinge backward at hips. Lower barbell down shins while maintaining neutral spine until deep hamstring stretch is felt.',
-    imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'ex-6',
-    name: 'Pull-Ups (Wide Grip)',
-    category: 'Calisthenics',
-    targetMuscleGroup: 'Back',
-    secondaryMuscles: ['Biceps', 'Rear Delts'],
-    difficulty: 'INTERMEDIATE',
-    equipmentRequired: 'Pull-Up Bar',
-    instructions: 'Hang from pull-up bar with overhand grip wider than shoulders. Drive elbows down and back until chin clears the bar.',
-    imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80',
-  },
-];
-
 const INITIAL_TEMPLATES: WorkoutTemplateItem[] = [
   {
     id: 'tpl-1',
@@ -198,39 +129,114 @@ const INITIAL_TEMPLATES: WorkoutTemplateItem[] = [
   },
 ];
 
-const INITIAL_LOGS: WorkoutLogItem[] = [
+const INITIAL_LOGS: WorkoutLogItem[] = [];
+
+const INITIAL_EXERCISES: ExerciseItem[] = [
   {
-    id: 'log-1',
-    memberName: 'Aarav Nambiar',
-    title: 'Monday Heavy Lower Body Session',
-    date: '2026-10-06',
-    durationMinutes: 55,
-    totalVolumeKg: 4320,
-    exercises: [
-      { exerciseName: 'Barbell Back Squat', setsCompleted: 4, repsCompleted: 8, weightKg: 85 }, // 2720 kg
-      { exerciseName: 'Barbell Romanian Deadlift (RDL)', setsCompleted: 4, repsCompleted: 8, weightKg: 50 }, // 1600 kg
-    ],
-    notes: 'Moved with explosive power out of the hole on squats. RPE 8.',
+    id: 'ex-squat',
+    name: 'Barbell Back Squat',
+    category: 'STRENGTH',
+    targetMuscleGroup: 'Quads (Legs)',
+    secondaryMuscles: ['Glutes', 'Hamstrings', 'Core'],
+    difficulty: 'ADVANCED',
+    equipmentRequired: 'Olympic Barbell & Squat Rack',
+    instructions: 'Place bar across upper traps. Unrack, brace core tightly, squat down until hip crease is below parallel, drive up explosively.',
+    imageUrl: '/images/exercises/squat.webp',
   },
   {
-    id: 'log-2',
-    memberName: 'Kavita Iyer',
-    title: 'Upper Push & Pull Power',
-    date: '2026-10-05',
-    durationMinutes: 50,
-    totalVolumeKg: 2880,
-    exercises: [
-      { exerciseName: 'Barbell Flat Bench Press', setsCompleted: 4, repsCompleted: 8, weightKg: 45 },
-      { exerciseName: 'Pull-Ups (Wide Grip)', setsCompleted: 4, repsCompleted: 6, weightKg: 60 },
-    ],
-    notes: 'Great mind-muscle connection on back exercises.',
+    id: 'ex-deadlift',
+    name: 'Conventional Deadlift',
+    category: 'POWERLIFTING',
+    targetMuscleGroup: 'Back & Lats',
+    secondaryMuscles: ['Hamstrings', 'Glutes', 'Traps'],
+    difficulty: 'ADVANCED',
+    equipmentRequired: 'Olympic Barbell & Calibrated Bumper Plates',
+    instructions: 'Stand mid-foot under bar. Hinge hips back, grasp bar just outside shins. Pull chest up, drag bar along legs, lockout hips firmly.',
+    imageUrl: '/images/exercises/deadlift.webp',
+  },
+  {
+    id: 'ex-bench',
+    name: 'Barbell Flat Bench Press',
+    category: 'STRENGTH',
+    targetMuscleGroup: 'Chest',
+    secondaryMuscles: ['Triceps', 'Anterior Deltoids'],
+    difficulty: 'INTERMEDIATE',
+    equipmentRequired: 'Olympic Barbell & Flat Bench',
+    instructions: 'Lie on bench with eyes under bar. Retract scapulae, unrack, lower bar controlled to mid-sternum, press upward smoothly to lockout.',
+    imageUrl: '/images/exercises/bench.webp',
+  },
+  {
+    id: 'ex-pullup',
+    name: 'Pull-Ups (Wide Grip)',
+    category: 'CALISTHENICS',
+    targetMuscleGroup: 'Back & Lats',
+    secondaryMuscles: ['Biceps', 'Rhomboids'],
+    difficulty: 'INTERMEDIATE',
+    equipmentRequired: 'Pull-up Rig / Bar',
+    instructions: 'Grip bar overhand slightly wider than shoulders. Depress scapulae, pull elbows down toward ribs until chin clears bar.',
+    imageUrl: '/images/exercises/pullup.webp',
+  },
+  {
+    id: 'ex-rdl',
+    name: 'Barbell Romanian Deadlift (RDL)',
+    category: 'STRENGTH',
+    targetMuscleGroup: 'Hamstrings',
+    secondaryMuscles: ['Glutes', 'Erector Spinae'],
+    difficulty: 'INTERMEDIATE',
+    equipmentRequired: 'Olympic Barbell',
+    instructions: 'Hold barbell with overhand grip. Soft bend in knees, hinge hips rearward while keeping back flat until feeling deep hamstring stretch.',
+    imageUrl: '/images/exercises/rdl.webp',
+  },
+  {
+    id: 'ex-ohp',
+    name: 'Overhead Standing Military Press',
+    category: 'STRENGTH',
+    targetMuscleGroup: 'Shoulders',
+    secondaryMuscles: ['Triceps', 'Upper Chest', 'Core'],
+    difficulty: 'INTERMEDIATE',
+    equipmentRequired: 'Olympic Barbell',
+    instructions: 'Rest bar across anterior deltoids. Squeeze glutes and quads, press bar vertically overhead, clearing face and locking elbows.',
+    imageUrl: '/images/exercises/ohp.webp',
+  },
+  {
+    id: 'ex-db-incline',
+    name: 'Dumbbell Incline Bench Press',
+    category: 'HYPERTROPHY',
+    targetMuscleGroup: 'Chest',
+    secondaryMuscles: ['Front Delts', 'Triceps'],
+    difficulty: 'INTERMEDIATE',
+    equipmentRequired: 'Incline Bench & Dumbbells',
+    instructions: 'Set bench to 30 degrees. Press dumbbells upward together in slight arc, controlling descent to deep stretch.',
+    imageUrl: '/images/exercises/incline-press.webp',
+  },
+  {
+    id: 'ex-cable-row',
+    name: 'Seated Cable Row',
+    category: 'HYPERTROPHY',
+    targetMuscleGroup: 'Back & Lats',
+    secondaryMuscles: ['Rear Delts', 'Biceps'],
+    difficulty: 'BEGINNER',
+    equipmentRequired: 'Low Cable Pulley Station',
+    instructions: 'Sit upright with knees slightly flexed. Pull V-bar handle to lower ribs while retracting shoulder blades.',
+    imageUrl: '/images/exercises/cable-row.webp',
+  },
+  {
+    id: 'ex-leg-raise',
+    name: 'Hanging Leg Raises',
+    category: 'CORE',
+    targetMuscleGroup: 'Core / Abs',
+    secondaryMuscles: ['Hip Flexors'],
+    difficulty: 'INTERMEDIATE',
+    equipmentRequired: 'Pull-up Bar',
+    instructions: 'Hang from bar with neutral spine. Without swinging, curl pelvis upward, bringing legs horizontal or higher.',
+    imageUrl: '/images/exercises/leg-raise.webp',
   },
 ];
 
 export const WorkoutsPage: React.FC = () => {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<'LIBRARY' | 'TEMPLATES' | 'LOGS'>('LIBRARY');
-  const [exercises, setExercises] = useState<ExerciseItem[]>(SAMPLE_EXERCISES);
+  const [exercises, setExercises] = useState<ExerciseItem[]>(INITIAL_EXERCISES);
   const [templates, setTemplates] = useState<WorkoutTemplateItem[]>(INITIAL_TEMPLATES);
   const [logs, setLogs] = useState<WorkoutLogItem[]>(INITIAL_LOGS);
 
@@ -248,24 +254,26 @@ export const WorkoutsPage: React.FC = () => {
 
   // Assign Form
   const [assignForm, setAssignForm] = useState({
-    memberId: 'm-1',
-    memberName: 'Aarav Nambiar (IP-FIT-001)',
+    memberId: '',
+    memberName: '',
     startDate: new Date().toISOString().split('T')[0],
   });
 
   // Log Workout Form
   const [logForm, setLogForm] = useState({
-    memberName: 'Aarav Nambiar',
-    title: 'Push Power Workout',
+    memberName: '',
+    title: '',
     durationMinutes: 45,
-    exerciseName: 'Barbell Flat Bench Press',
-    sets: 4,
-    reps: 8,
-    weightKg: 70,
+    exerciseName: '',
+    sets: 3,
+    reps: 10,
+    weightKg: 0,
     notes: '',
   });
 
   // Fetch real exercises from API on mount
+  const [membersList, setMembersList] = useState<any[]>([]);
+
   useEffect(() => {
     const fetchExercises = async () => {
       try {
@@ -274,10 +282,19 @@ export const WorkoutsPage: React.FC = () => {
           setExercises(res.data.exercises);
         }
       } catch {
-        // Fallback
+        // Fallback to INITIAL_EXERCISES
+      }
+    };
+    const fetchMembers = async () => {
+      try {
+        const mRes = await api.get<any[]>('/members');
+        if (mRes.success && Array.isArray(mRes.data)) setMembersList(mRes.data);
+      } catch {
+        // Fallback or ignore if members endpoint fails
       }
     };
     fetchExercises();
+    fetchMembers();
   }, []);
 
   const filteredExercises = exercises.filter((ex) => {
@@ -578,20 +595,28 @@ export const WorkoutsPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3.5 font-semibold text-foreground">{log.memberName}</td>
-                      <td className="px-4 py-3.5 font-medium">{log.title}</td>
-                      <td className="px-4 py-3.5 text-xs text-muted-foreground">{log.date}</td>
-                      <td className="px-4 py-3.5 text-muted-foreground">⏱️ {log.durationMinutes} mins</td>
-                      <td className="px-4 py-3.5 font-bold text-primary">
-                        ⚡ {log.totalVolumeKg.toLocaleString()} kg
-                      </td>
-                      <td className="px-4 py-3.5 text-xs text-muted-foreground">
-                        {log.exercises.map((e) => `${e.exerciseName} (${e.setsCompleted}x${e.repsCompleted})`).join(', ')}
+                  {logs.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-12 text-muted-foreground">
+                        No workout sessions logged yet.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    logs.map((log) => (
+                      <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3.5 font-semibold text-foreground">{log.memberName}</td>
+                        <td className="px-4 py-3.5 font-medium">{log.title}</td>
+                        <td className="px-4 py-3.5 text-xs text-muted-foreground">{log.date}</td>
+                        <td className="px-4 py-3.5 text-muted-foreground">⏱️ {log.durationMinutes} mins</td>
+                        <td className="px-4 py-3.5 font-bold text-primary">
+                          ⚡ {log.totalVolumeKg.toLocaleString()} kg
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-muted-foreground">
+                          {log.exercises.map((e) => `${e.exerciseName} (${e.setsCompleted}x${e.repsCompleted})`).join(', ')}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -652,13 +677,23 @@ export const WorkoutsPage: React.FC = () => {
             </p>
             <Select
               label="Select Member"
-              value={assignForm.memberName}
-              onChange={(e) => setAssignForm({ ...assignForm, memberName: e.target.value })}
-              options={[
-                { value: 'Aarav Nambiar (IP-FIT-001)', label: 'Aarav Nambiar (IP-FIT-001)' },
-                { value: 'Kavita Iyer (IP-FIT-002)', label: 'Kavita Iyer (IP-FIT-002)' },
-                { value: 'Devendra Patel (IP-FIT-006)', label: 'Devendra Patel (IP-FIT-006)' },
-              ]}
+              value={assignForm.memberId}
+              onChange={(e) => {
+                const selected = membersList.find((m) => m.id === e.target.value);
+                setAssignForm({
+                  ...assignForm,
+                  memberId: e.target.value,
+                  memberName: selected ? `${selected.name} (${selected.code || selected.memberCode || ''})` : e.target.value,
+                });
+              }}
+              options={
+                membersList.length > 0
+                  ? membersList.map((m) => ({
+                      value: m.id,
+                      label: `${m.name} (${m.code || m.memberCode || ''})`,
+                    }))
+                  : [{ value: '', label: 'No members registered yet' }]
+              }
             />
             <Input
               type="date"

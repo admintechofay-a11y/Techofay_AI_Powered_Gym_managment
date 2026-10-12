@@ -1,10 +1,36 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { AttendanceService } from '../services/attendanceService.js';
+import { Attendance } from '../models/Attendance.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import { requirePermission } from '../middleware/rbacMiddleware.js';
 import { APP_MODULES, PERMISSION_ACTIONS } from '@gymos/shared';
 
 const router = Router();
+
+// GET /api/attendance - List recent check-in/out attendance logs
+router.get(
+  '/',
+  authMiddleware,
+  requirePermission(APP_MODULES.ATTENDANCE, PERMISSION_ACTIONS.VIEW),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const records = await Attendance.find({ tenantId: req.user!.tenantId })
+        .populate('memberId', 'firstName lastName memberCode phone email')
+        .sort({ checkInTime: -1 })
+        .limit(100);
+
+      res.json({
+        success: true,
+        data: records,
+        meta: { requestId: req.correlationId },
+      });
+      return;
+    } catch (error) {
+      next(error);
+      return;
+    }
+  },
+);
 
 // POST /api/attendance/check-in - Process QR, Member ID or phone check-in
 router.post(
@@ -13,7 +39,7 @@ router.post(
   requirePermission(APP_MODULES.ATTENDANCE, PERMISSION_ACTIONS.CREATE),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { identifier, method = 'QR_SCAN', branchId } = req.body;
+      const { identifier, method = 'QR_SCAN', branchId, allowOverride } = req.body;
       if (!identifier) {
         res.status(400).json({
           success: false,
@@ -28,6 +54,7 @@ router.post(
         identifier,
         method,
         performedByUserId: req.user!.userId,
+        allowOverride: Boolean(allowOverride),
       });
 
       if (!result.allowed) {

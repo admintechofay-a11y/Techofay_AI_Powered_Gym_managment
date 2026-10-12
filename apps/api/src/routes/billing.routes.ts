@@ -52,12 +52,12 @@ router.get(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { status, memberId } = req.query;
-      const filter: Record<string, any> = {};
+      const filter: Record<string, any> = { tenantId: req.user!.tenantId };
       if (status) filter.status = status;
       if (memberId) filter.memberId = memberId;
 
       const invoices = await Invoice.find(filter)
-        .populate('memberId', 'firstName lastName memberId phone email')
+        .populate('memberId', 'firstName lastName memberCode phone email')
         .sort({ createdAt: -1 })
         .limit(100);
 
@@ -175,8 +175,8 @@ router.get(
   requirePermission(APP_MODULES.BILLING, PERMISSION_ACTIONS.VIEW),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const payments = await Payment.find()
-        .populate('memberId', 'firstName lastName memberId phone')
+      const payments = await Payment.find({ tenantId: req.user!.tenantId })
+        .populate('memberId', 'firstName lastName memberCode phone')
         .sort({ transactionDate: -1 })
         .limit(100);
 

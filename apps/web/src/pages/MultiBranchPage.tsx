@@ -45,9 +45,32 @@ interface ConsolidatedData {
   branchBreakdown: BranchComparisonItem[];
 }
 
+import { api } from '../services/api.js';
+import { EmptyState } from '../components/ui/EmptyState.js';
+import { ErrorState } from '../components/ui/ErrorState.js';
+import { LoadingSkeleton } from '../components/ui/LoadingSkeleton.js';
+
+const INITIAL_CONSOLIDATED_DATA: ConsolidatedData = {
+  totals: {
+    totalMembers: 0,
+    totalActiveMembers: 0,
+    totalStaff: 0,
+    totalAttendance: 0,
+    totalRevenueInPaise: 0,
+    totalExpensesInPaise: 0,
+    totalNetProfitInPaise: 0,
+    revenueFormatted: '₹0',
+    expensesFormatted: '₹0',
+    netProfitFormatted: '₹0',
+    overallProfitMargin: 0,
+  },
+  branchBreakdown: [],
+};
+
 export const MultiBranchPage: React.FC = () => {
-  const [data, setData] = useState<ConsolidatedData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<ConsolidatedData | null>(INITIAL_CONSOLIDATED_DATA);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferMemberId, setTransferMemberId] = useState('');
   const [destBranchId, setDestBranchId] = useState('');
@@ -55,86 +78,20 @@ export const MultiBranchPage: React.FC = () => {
   const [transferActiveSubs, setTransferActiveSubs] = useState(true);
   const [transferStatus, setTransferStatus] = useState<string | null>(null);
 
-  // Fallback demo data
-  const sampleData: ConsolidatedData = {
-    totals: {
-      totalMembers: 3240,
-      totalActiveMembers: 2890,
-      totalStaff: 28,
-      totalAttendance: 14820,
-      totalRevenueInPaise: 285000000,
-      totalExpensesInPaise: 112000000,
-      totalNetProfitInPaise: 173000000,
-      revenueFormatted: '₹28,50,000',
-      expensesFormatted: '₹11,20,000',
-      netProfitFormatted: '₹17,30,000',
-      overallProfitMargin: 61,
-    },
-    branchBreakdown: [
-      {
-        branchId: 'b-01',
-        branchName: 'Andheri West Flagship',
-        branchCode: 'AW01',
-        city: 'Mumbai',
-        totalMembers: 1420,
-        activeMembers: 1290,
-        staffCount: 12,
-        attendanceThisMonth: 6450,
-        revenueInPaise: 128000000,
-        expensesInPaise: 48000000,
-        netProfitInPaise: 80000000,
-        profitMargin: 62,
-      },
-      {
-        branchId: 'b-02',
-        branchName: 'BKC Premium Studio',
-        branchCode: 'BKC02',
-        city: 'Mumbai',
-        totalMembers: 1120,
-        activeMembers: 1010,
-        staffCount: 10,
-        attendanceThisMonth: 5320,
-        revenueInPaise: 104000000,
-        expensesInPaise: 42000000,
-        netProfitInPaise: 62000000,
-        profitMargin: 60,
-      },
-      {
-        branchId: 'b-03',
-        branchName: 'Koramangala Fitness Hub',
-        branchCode: 'KOR03',
-        city: 'Bengaluru',
-        totalMembers: 700,
-        activeMembers: 590,
-        staffCount: 6,
-        attendanceThisMonth: 3050,
-        revenueInPaise: 53000000,
-        expensesInPaise: 22000000,
-        netProfitInPaise: 31000000,
-        profitMargin: 58,
-      },
-    ],
-  };
-
   useEffect(() => {
     fetchConsolidated();
   }, []);
 
   const fetchConsolidated = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const token = localStorage.getItem('gymos_token');
-      const res = await fetch('/api/branches/consolidated', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const json = await res.json();
-        setData(json.data);
-      } else {
-        setData(sampleData);
+      const res = await api.get<ConsolidatedData>('/branches/consolidated');
+      if (res.success && res.data) {
+        setData(res.data);
       }
     } catch {
-      setData(sampleData);
+      // Keep resilient fallback to INITIAL_CONSOLIDATED_DATA
     } finally {
       setLoading(false);
     }
@@ -148,40 +105,31 @@ export const MultiBranchPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('gymos_token');
-      const res = await fetch('/api/branches/transfer-member', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          memberId: transferMemberId,
-          destinationBranchId: destBranchId,
-          reason: transferReason,
-          transferActiveMemberships: transferActiveSubs,
-        }),
+      const res = await api.post('/branches/transfer-member', {
+        memberId: transferMemberId,
+        destinationBranchId: destBranchId,
+        reason: transferReason,
+        transferActiveMemberships: transferActiveSubs,
       });
 
-      if (res.ok) {
-        const result = await res.json();
-        setTransferStatus(`Successfully transferred ${result.data.member.fullName} to ${result.data.member.newBranchName}`);
+      if (res.success && res.data) {
+        setTransferStatus(`Successfully transferred ${res.data.member?.fullName || 'member'} to destination branch`);
         setTimeout(() => {
           setShowTransferModal(false);
           setTransferStatus(null);
           setTransferMemberId('');
           setTransferReason('');
+          fetchConsolidated();
         }, 1500);
       } else {
-        const err = await res.json();
-        alert(err.error?.message || 'Transfer request failed');
+        alert(res.error?.message || 'Transfer request failed');
       }
     } catch {
       alert('Network error initiating member transfer');
     }
   };
 
-  const currentData = data || sampleData;
+  const currentData = data;
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
@@ -224,60 +172,83 @@ export const MultiBranchPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Network Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
-            <span>Consolidated Revenue</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-bold text-foreground">{currentData.totals.revenueFormatted}</div>
-          <div className="text-xs text-muted-foreground mt-1">This Month across all branches</div>
+      {loading && (
+        <div className="space-y-4">
+          <LoadingSkeleton count={4} />
         </div>
+      )}
 
-        <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
-            <span>Operating Profit (EBITDA)</span>
-            <TrendingUp className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-2xl font-bold text-emerald-400">{currentData.totals.netProfitFormatted}</div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Overall Margin: <span className="font-semibold text-foreground">{currentData.totals.overallProfitMargin}%</span>
-          </div>
-        </div>
+      {error && !loading && (
+        <ErrorState
+          title="Branch Analytics Unavailable"
+          message={error}
+          onRetry={fetchConsolidated}
+        />
+      )}
 
-        <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
-            <span>Network Active Members</span>
-            <Users className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-bold text-foreground">
-            {currentData.totals.totalActiveMembers.toLocaleString('en-IN')}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Total Enrolled: {currentData.totals.totalMembers.toLocaleString('en-IN')}
-          </div>
-        </div>
+      {!loading && !error && (!currentData || currentData.branchBreakdown.length === 0) && (
+        <EmptyState
+          title="No Branches Found"
+          description="Add branch locations to track network-wide revenue, profit margins, and attendance."
+        />
+      )}
 
-        <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
-          <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
-            <span>Monthly Check-Ins</span>
-            <CalendarCheck className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-2xl font-bold text-foreground">
-            {currentData.totals.totalAttendance.toLocaleString('en-IN')}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Managed by {currentData.totals.totalStaff} Staff Members
-          </div>
-        </div>
-      </div>
+      {!loading && !error && currentData && currentData.branchBreakdown.length > 0 && (
+        <>
+          {/* Network Overview Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
+              <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
+                <span>Consolidated Revenue</span>
+                <DollarSign className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="text-2xl font-bold text-foreground">{currentData.totals.revenueFormatted}</div>
+              <div className="text-xs text-muted-foreground mt-1">This Month across all branches</div>
+            </div>
 
-      {/* Branch Cards */}
-      <div>
-        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-emerald-400" />
-          Active Branches Breakdown
+            <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
+              <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
+                <span>Operating Profit (EBITDA)</span>
+                <TrendingUp className="w-4 h-4 text-blue-400" />
+              </div>
+              <div className="text-2xl font-bold text-emerald-400">{currentData.totals.netProfitFormatted}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Overall Margin: <span className="font-semibold text-foreground">{currentData.totals.overallProfitMargin}%</span>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
+              <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
+                <span>Network Active Members</span>
+                <Users className="w-4 h-4 text-purple-400" />
+              </div>
+              <div className="text-2xl font-bold text-foreground">
+                {currentData.totals.totalActiveMembers.toLocaleString('en-IN')}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Total Enrolled: {currentData.totals.totalMembers.toLocaleString('en-IN')}
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
+              <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
+                <span>Monthly Check-Ins</span>
+                <CalendarCheck className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="text-2xl font-bold text-foreground">
+                {currentData.totals.totalAttendance.toLocaleString('en-IN')}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Managed by {currentData.totals.totalStaff} Staff Members
+              </div>
+            </div>
+          </div>
+
+          {/* Branch Cards */}
+          <div>
+            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-emerald-400" />
+              Active Branches Breakdown
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {currentData.branchBreakdown.map((b, idx) => (
@@ -372,6 +343,8 @@ export const MultiBranchPage: React.FC = () => {
           </table>
         </div>
       </div>
+      </>
+      )}
 
       {/* Member Transfer Modal */}
       {showTransferModal && (
@@ -423,7 +396,7 @@ export const MultiBranchPage: React.FC = () => {
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm"
                 >
                   <option value="">Select destination branch...</option>
-                  {currentData.branchBreakdown.map((b) => (
+                  {(currentData?.branchBreakdown || []).map((b) => (
                     <option key={b.branchId} value={b.branchId}>
                       {b.branchName} ({b.branchCode}) - {b.city || 'Branch'}
                     </option>

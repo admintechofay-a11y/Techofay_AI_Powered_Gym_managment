@@ -19,6 +19,9 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage.js';
 import { VerifyEmailPage } from './pages/VerifyEmailPage.js';
 import { DashboardOverviewPage } from './pages/DashboardOverviewPage.js';
 import { MembersListPage } from './pages/MembersListPage.js';
+import { AttendancePage } from './pages/AttendancePage.js';
+import { MembershipsPage } from './pages/MembershipsPage.js';
+import { BillingPage } from './pages/BillingPage.js';
 import { IntegrationsSettingsPage } from './pages/IntegrationsSettingsPage.js';
 import { MemberPortalPage } from './pages/MemberPortalPage.js';
 import { CrmPage } from './pages/CrmPage.js';
@@ -61,9 +64,9 @@ export const App: React.FC = () => {
       <Route element={<StaffDashboardLayout />}>
         <Route path="/dashboard" element={<DashboardOverviewPage />} />
         <Route path="/members" element={<MembersListPage />} />
-        <Route path="/memberships" element={<DashboardOverviewPage />} />
-        <Route path="/attendance" element={<DashboardOverviewPage />} />
-        <Route path="/billing" element={<DashboardOverviewPage />} />
+        <Route path="/memberships" element={<MembershipsPage />} />
+        <Route path="/attendance" element={<AttendancePage />} />
+        <Route path="/billing" element={<BillingPage />} />
         <Route path="/crm" element={<CrmPage />} />
         <Route path="/classes" element={<ClassesPage />} />
         <Route path="/trainers" element={<TrainersPage />} />

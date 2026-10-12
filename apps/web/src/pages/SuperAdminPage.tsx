@@ -21,6 +21,10 @@ import {
   Send,
   Zap,
 } from 'lucide-react';
+import { api } from '../services/api.js';
+import { EmptyState } from '../components/ui/EmptyState.js';
+import { ErrorState } from '../components/ui/ErrorState.js';
+import { LoadingSkeleton } from '../components/ui/LoadingSkeleton.js';
 
 interface TenantItem {
   _id: string;
@@ -61,11 +65,34 @@ interface PlatformMetrics {
   };
 }
 
+const INITIAL_TENANTS: TenantItem[] = [];
+
+const INITIAL_METRICS: PlatformMetrics = {
+  overview: {
+    totalTenants: 0,
+    activeTenants: 0,
+    trialTenants: 0,
+    suspendedTenants: 0,
+    totalMembers: 0,
+    totalBranches: 0,
+  },
+  revenue: {
+    mrrFormatted: '₹0',
+    arrFormatted: '₹0',
+    activePaidSubscriptions: 0,
+  },
+  tierBreakdown: {
+    starter: 0,
+    professional: 0,
+    enterprise: 0,
+  },
+};
+
 export const SuperAdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'tenants' | 'revenue' | 'limits' | 'tickets' | 'audit'>('tenants');
-  const [tenants, setTenants] = useState<TenantItem[]>([]);
-  const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [tenants, setTenants] = useState<TenantItem[]>(INITIAL_TENANTS);
+  const [metrics, setMetrics] = useState<PlatformMetrics | null>(INITIAL_METRICS);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [tierFilter, setTierFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -95,60 +122,7 @@ export const SuperAdminPage: React.FC = () => {
     branchPhone: '',
   });
 
-  // Mock initial data if backend not connected or demo
-  const sampleTenants: TenantItem[] = [
-    {
-      _id: 't-001',
-      name: 'Pulse Fitness Hub',
-      subdomain: 'pulse-fit',
-      tier: 'PROFESSIONAL',
-      status: 'ACTIVE',
-      contactEmail: 'contact@pulsefit.in',
-      contactPhone: '+919988776655',
-      metrics: { memberCount: 1420, branchCount: 3, planTier: 'PROFESSIONAL', subscriptionStatus: 'ACTIVE' },
-    },
-    {
-      _id: 't-002',
-      name: 'Iron Forge Athletics',
-      subdomain: 'iron-forge',
-      tier: 'ENTERPRISE',
-      status: 'ACTIVE',
-      contactEmail: 'hq@ironforge.com',
-      contactPhone: '+919876543210',
-      metrics: { memberCount: 4850, branchCount: 6, planTier: 'ENTERPRISE', subscriptionStatus: 'ACTIVE' },
-    },
-    {
-      _id: 't-003',
-      name: 'Zenith Yoga & CrossFit',
-      subdomain: 'zenith-crossfit',
-      tier: 'STARTER',
-      status: 'TRIAL',
-      contactEmail: 'zenith@gmail.com',
-      contactPhone: '+919123456780',
-      metrics: { memberCount: 180, branchCount: 1, planTier: 'STARTER', subscriptionStatus: 'TRIAL' },
-    },
-  ];
-
-  const sampleMetrics: PlatformMetrics = {
-    overview: {
-      totalTenants: 28,
-      activeTenants: 24,
-      trialTenants: 4,
-      suspendedTenants: 0,
-      totalMembers: 18450,
-      totalBranches: 46,
-    },
-    revenue: {
-      mrrFormatted: '₹4,85,000',
-      arrFormatted: '₹58,20,000',
-      activePaidSubscriptions: 24,
-    },
-    tierBreakdown: {
-      starter: 12,
-      professional: 10,
-      enterprise: 6,
-    },
-  };
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -156,33 +130,23 @@ export const SuperAdminPage: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const token = localStorage.getItem('gymos_token');
       const [tenantsRes, metricsRes] = await Promise.all([
-        fetch('/api/super-admin/tenants', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch('/api/super-admin/metrics', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        api.get<any>('/super-admin/tenants'),
+        api.get<any>('/super-admin/metrics'),
       ]);
 
-      if (tenantsRes.ok) {
-        const tData = await tenantsRes.json();
-        setTenants(tData.data || []);
-      } else {
-        setTenants(sampleTenants);
+      if (tenantsRes.success && tenantsRes.data) {
+        const list = Array.isArray(tenantsRes.data) ? tenantsRes.data : tenantsRes.data.tenants || [];
+        setTenants(list);
       }
 
-      if (metricsRes.ok) {
-        const mData = await metricsRes.json();
-        setMetrics(mData.data);
-      } else {
-        setMetrics(sampleMetrics);
+      if (metricsRes.success && metricsRes.data) {
+        setMetrics(metricsRes.data);
       }
     } catch {
-      setTenants(sampleTenants);
-      setMetrics(sampleMetrics);
+      // Keep resilient fallback to INITIAL_TENANTS and INITIAL_METRICS
     } finally {
       setLoading(false);
     }
@@ -191,24 +155,13 @@ export const SuperAdminPage: React.FC = () => {
   const handleOnboardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('gymos_token');
-      const res = await fetch('/api/super-admin/onboard', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(onboardForm),
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        alert(`Tenant "${result.data.tenant.name}" onboarded successfully!`);
+      const res = await api.post('/super-admin/onboard', onboardForm);
+      if (res.success && res.data) {
+        alert(`Tenant "${res.data.tenant.name}" onboarded successfully!`);
         setShowOnboardModal(false);
         fetchData();
       } else {
-        const err = await res.json();
-        alert(err.error?.message || 'Failed to onboard tenant');
+        alert(res.error?.message || 'Failed to onboard tenant');
       }
     } catch {
       alert('Network error while onboarding tenant');
@@ -217,23 +170,17 @@ export const SuperAdminPage: React.FC = () => {
 
   const handleImpersonate = async (tenantId: string) => {
     try {
-      const token = localStorage.getItem('gymos_token');
-      const res = await fetch(`/api/super-admin/tenants/${tenantId}/impersonate`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        localStorage.setItem('gymos_impersonation_token', result.data.accessToken);
+      const res = await api.post(`/super-admin/tenants/${tenantId}/impersonate`);
+      if (res.success && res.data) {
+        localStorage.setItem('gymos_impersonation_token', res.data.accessToken);
         setImpersonationMsg(
-          `Impersonating ${result.data.tenant.name} as ${result.data.user.name} (${result.data.user.role}). Redirecting...`,
+          `Impersonating ${res.data.tenant.name} as ${res.data.user.name} (${res.data.user.role}). Redirecting...`,
         );
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 1500);
       } else {
-        alert('Impersonation session could not be established');
+        alert(res.error?.message || 'Impersonation session could not be established');
       }
     } catch {
       alert('Error initiating impersonation session');
@@ -243,17 +190,14 @@ export const SuperAdminPage: React.FC = () => {
   const handleStatusChange = async (tenantId: string, status: string) => {
     if (!confirm(`Are you sure you want to mark tenant as ${status}?`)) return;
     try {
-      const token = localStorage.getItem('gymos_token');
-      const res = await fetch(`/api/super-admin/tenants/${tenantId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status, reason: 'Super Admin manual status toggle' }),
+      const res = await api.patch(`/super-admin/tenants/${tenantId}/status`, {
+        status,
+        reason: 'Super Admin manual status toggle',
       });
-      if (res.ok) {
+      if (res.success) {
         fetchData();
+      } else {
+        alert(res.error?.message || 'Failed to update tenant status');
       }
     } catch (err) {
       console.error(err);
@@ -318,8 +262,19 @@ export const SuperAdminPage: React.FC = () => {
         </div>
       )}
 
+      {loading && <LoadingSkeleton count={4} />}
+      {error && !loading && <ErrorState message={error} onRetry={fetchData} />}
+      {!loading && !error && !metrics && tenants.length === 0 && (
+        <EmptyState
+          title="No Platform Tenants Found"
+          description="Onboard gym tenants to view network metrics, manage subscriptions, and configure quotas."
+          actionLabel="Onboard First Tenant"
+          onAction={() => setShowOnboardModal(true)}
+        />
+      )}
+
       {/* KPI Overview Cards */}
-      {metrics && (
+      {metrics && !loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm">
             <div className="flex items-center justify-between text-muted-foreground text-sm mb-2">
@@ -483,7 +438,14 @@ export const SuperAdminPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredTenants.map((t) => (
+                {filteredTenants.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                      No gym tenants found. Click "+ Onboard Tenant" to provision a new tenant.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTenants.map((t) => (
                   <tr key={t._id} className="hover:bg-muted/20 transition-colors">
                     <td className="py-3.5 px-4 font-medium">
                       <div>{t.name}</div>
@@ -562,7 +524,7 @@ export const SuperAdminPage: React.FC = () => {
                       )}
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
@@ -1029,18 +991,17 @@ export const SuperAdminPage: React.FC = () => {
                 onClick={async () => {
                   const planTier = (document.getElementById('modalPlanTier') as HTMLSelectElement).value;
                   const billingCycle = (document.getElementById('modalBillingCycle') as HTMLSelectElement).value;
-                  const token = localStorage.getItem('gymos_token');
-                  await fetch(`/api/super-admin/tenants/${selectedTenant._id}/subscription`, {
-                    method: 'PATCH',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({ planTier, billingCycle }),
+                  const res = await api.patch(`/super-admin/tenants/${selectedTenant._id}/subscription`, {
+                    planTier,
+                    billingCycle,
                   });
-                  alert('Subscription updated');
-                  setShowSubscriptionModal(false);
-                  fetchData();
+                  if (res.success) {
+                    alert('Subscription updated');
+                    setShowSubscriptionModal(false);
+                    fetchData();
+                  } else {
+                    alert(res.error?.message || 'Failed to update subscription');
+                  }
                 }}
                 className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition-colors"
               >

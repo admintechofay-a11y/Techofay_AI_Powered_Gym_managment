@@ -20,6 +20,7 @@
     "test:e2e": "pnpm --filter @gymos/web test:e2e",
     "test:load": "node load-tests/smoke-runner.js",
     "seed": "pnpm --filter @gymos/api seed",
+    "seed:reset": "pnpm --filter @gymos/api seed",
     "check:links": "tsx scripts/check-links.ts",
     "check:placeholders": "tsx scripts/check-placeholders.ts",
     "prepare": "husky"

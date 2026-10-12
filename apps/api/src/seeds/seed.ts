@@ -71,6 +71,9 @@ const LAST_NAMES = [
 ];
 
 export async function runSeed(customMongoUri?: string) {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
+    throw new Error('Database seeding is strictly prohibited in production without ALLOW_PRODUCTION_SEED=true');
+  }
   let mongoServer: any = null;
   const uri = customMongoUri || env.MONGODB_URI;
 

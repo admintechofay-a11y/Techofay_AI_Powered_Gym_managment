@@ -81,145 +81,7 @@ const PIPELINE_COLUMNS: { key: LeadPipelineStage; label: string; color: string; 
   { key: 'LOST', label: 'Lost', color: 'border-rose-500/40 bg-rose-500/5', badgeVariant: 'destructive' },
 ];
 
-const INITIAL_LEADS: LeadItem[] = [
-  {
-    id: 'lead-1',
-    name: 'Rohan Mehra',
-    email: 'rohan.mehra@ironpulse-crm.org',
-    phone: '+91 98222 33445',
-    pipelineStatus: 'NEW',
-    source: 'WEBSITE',
-    leadScore: 'HOT',
-    assignedRepName: 'Priya Sharma',
-    assignedRepId: 'rep-1',
-    fitnessGoal: 'Muscle Hypertrophy & Strength',
-    notes: 'Interested in annual CrossFit membership package and trainer consultation.',
-    createdAt: '2026-10-06T10:30:00Z',
-    activities: [
-      {
-        id: 'act-1',
-        type: 'NOTE',
-        content: 'Web lead captured via public membership form. Auto-assigned to Priya Sharma.',
-        createdAt: '2026-10-06T10:30:00Z',
-      },
-    ],
-  },
-  {
-    id: 'lead-2',
-    name: 'Aarti Deshmukh',
-    email: 'aarti.deshmukh@ironpulse-crm.org',
-    phone: '+91 98111 44556',
-    pipelineStatus: 'CONTACTED',
-    source: 'INSTAGRAM',
-    leadScore: 'WARM',
-    assignedRepName: 'Simran Kaur',
-    assignedRepId: 'rep-2',
-    fitnessGoal: 'Weight Loss & Cardio',
-    notes: 'Inquired about ladies batch and morning spin classes.',
-    followUpDate: '2026-10-08T11:00:00Z',
-    createdAt: '2026-10-05T14:15:00Z',
-    activities: [
-      {
-        id: 'act-2a',
-        type: 'CALL',
-        content: 'Initial discovery call conducted. Discussed 6-month combo plan.',
-        staffName: 'Simran Kaur',
-        createdAt: '2026-10-05T16:00:00Z',
-        result: 'Follow up after family discussion',
-      },
-    ],
-  },
-  {
-    id: 'lead-3',
-    name: 'Vikram Singhania',
-    email: 'vikram.singhania@ironpulse-crm.org',
-    phone: '+91 98333 77889',
-    pipelineStatus: 'INTERESTED',
-    source: 'WALK_IN',
-    leadScore: 'HOT',
-    assignedRepName: 'Priya Sharma',
-    assignedRepId: 'rep-1',
-    fitnessGoal: 'Olympic Weightlifting',
-    notes: 'Visited gym facility. Extremely impressed by Eleiko barbell section.',
-    createdAt: '2026-10-04T12:00:00Z',
-    activities: [
-      {
-        id: 'act-3',
-        type: 'MEETING',
-        content: 'Gym floor tour and coach introduction.',
-        staffName: 'Priya Sharma',
-        createdAt: '2026-10-04T12:30:00Z',
-      },
-    ],
-  },
-  {
-    id: 'lead-4',
-    name: 'Pooja Hegde',
-    email: 'pooja.hegde@ironpulse-crm.org',
-    phone: '+91 98777 22110',
-    pipelineStatus: 'TRIAL_BOOKED',
-    source: 'REFERRAL',
-    leadScore: 'HOT',
-    assignedRepName: 'Simran Kaur',
-    assignedRepId: 'rep-2',
-    fitnessGoal: 'HIIT & Functional Fitness',
-    notes: 'Trial booked for Thursday 7:00 AM CrossFit intro.',
-    followUpDate: '2026-10-09T07:00:00Z',
-    createdAt: '2026-10-03T09:00:00Z',
-    activities: [
-      {
-        id: 'act-4',
-        type: 'NOTE',
-        content: 'Complimentary trial pass issued. Assigned trainer: Kabir Bhasin.',
-        createdAt: '2026-10-03T11:00:00Z',
-      },
-    ],
-  },
-  {
-    id: 'lead-5',
-    name: 'Devendra Patel',
-    email: 'devendra.patel@ironpulse-crm.org',
-    phone: '+91 98999 33221',
-    pipelineStatus: 'TRIAL_COMPLETED',
-    source: 'GOOGLE_ADS',
-    leadScore: 'HOT',
-    assignedRepName: 'Priya Sharma',
-    assignedRepId: 'rep-1',
-    fitnessGoal: 'General Fitness',
-    notes: 'Completed Saturday trial session. Great feedback from coach.',
-    createdAt: '2026-10-02T15:30:00Z',
-    activities: [
-      {
-        id: 'act-5',
-        type: 'CALL',
-        content: 'Post-trial feedback call. Ready to sign up for 12 months.',
-        staffName: 'Priya Sharma',
-        createdAt: '2026-10-03T18:00:00Z',
-      },
-    ],
-  },
-  {
-    id: 'lead-6',
-    name: 'Ananya Sharma',
-    email: 'ananya.sharma@ironpulse-crm.org',
-    phone: '+91 98333 44455',
-    pipelineStatus: 'CONVERTED',
-    source: 'REFERRAL',
-    leadScore: 'HOT',
-    assignedRepName: 'Simran Kaur',
-    assignedRepId: 'rep-2',
-    fitnessGoal: 'Fat Loss',
-    createdAt: '2026-10-01T11:00:00Z',
-    activities: [
-      {
-        id: 'act-6',
-        type: 'STATUS_CHANGE',
-        content: 'Converted to active member. Plan: Annual Elite Pass.',
-        createdAt: '2026-10-02T12:00:00Z',
-      },
-    ],
-  },
-];
+const INITIAL_LEADS: LeadItem[] = [];
 
 export const CrmPage: React.FC = () => {
   const { addToast } = useToast();
@@ -272,11 +134,13 @@ export const CrmPage: React.FC = () => {
     const fetchLeads = async () => {
       try {
         const res = await api.get('/crm/leads');
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.success && Array.isArray(res.data)) {
           setLeads(res.data);
+        } else {
+          setLeads([]);
         }
       } catch {
-        // Fallback to rich initial leads
+        setLeads([]);
       }
     };
     fetchLeads();
@@ -772,46 +636,54 @@ export const CrmPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredLeads.map((lead) => (
-                  <tr
-                    key={lead.id}
-                    className="hover:bg-muted/30 transition-colors cursor-pointer"
-                    onClick={() => {
-                      setSelectedLead(lead);
-                      setIsDetailDrawerOpen(true);
-                    }}
-                  >
-                    <td className="px-4 py-3.5 font-semibold text-foreground">{lead.name}</td>
-                    <td className="px-4 py-3.5 text-muted-foreground">
-                      <div>{lead.phone}</div>
-                      <div className="text-xs text-muted-foreground/80">{lead.email}</div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <Badge variant="outline">{lead.pipelineStatus.replace('_', ' ')}</Badge>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-xs font-bold text-primary">{lead.leadScore}</span>
-                    </td>
-                    <td className="px-4 py-3.5 text-xs text-muted-foreground font-mono">{lead.source}</td>
-                    <td className="px-4 py-3.5 text-muted-foreground">{lead.assignedRepName}</td>
-                    <td className="px-4 py-3.5 text-xs text-muted-foreground">
-                      {lead.followUpDate ? new Date(lead.followUpDate).toLocaleDateString() : '—'}
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedLead(lead);
-                          setIsDetailDrawerOpen(true);
-                        }}
-                      >
-                        Details <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
+                {filteredLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-10 text-xs text-muted-foreground">
+                      No leads found matching your criteria. Click "Capture Inbound Lead" to add a prospect.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredLeads.map((lead) => (
+                    <tr
+                      key={lead.id}
+                      className="hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedLead(lead);
+                        setIsDetailDrawerOpen(true);
+                      }}
+                    >
+                      <td className="px-4 py-3.5 font-semibold text-foreground">{lead.name}</td>
+                      <td className="px-4 py-3.5 text-muted-foreground">
+                        <div>{lead.phone}</div>
+                        <div className="text-xs text-muted-foreground/80">{lead.email}</div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <Badge variant="outline">{lead.pipelineStatus.replace('_', ' ')}</Badge>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className="text-xs font-bold text-primary">{lead.leadScore}</span>
+                      </td>
+                      <td className="px-4 py-3.5 text-xs text-muted-foreground font-mono">{lead.source}</td>
+                      <td className="px-4 py-3.5 text-muted-foreground">{lead.assignedRepName}</td>
+                      <td className="px-4 py-3.5 text-xs text-muted-foreground">
+                        {lead.followUpDate ? new Date(lead.followUpDate).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLead(lead);
+                            setIsDetailDrawerOpen(true);
+                          }}
+                        >
+                          Details <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -1051,7 +923,7 @@ export const CrmPage: React.FC = () => {
         <form onSubmit={handleCreateLead} className="space-y-4">
           <Input
             label="Prospect Full Name *"
-            placeholder="e.g. Rohan Mehra"
+            placeholder="Enter lead full name"
             value={newLeadForm.name}
             onChange={(e) => setNewLeadForm({ ...newLeadForm, name: e.target.value })}
             required

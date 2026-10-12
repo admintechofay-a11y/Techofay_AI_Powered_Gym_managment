@@ -72,7 +72,7 @@ test.describe('Phase 5: AI & Advanced Analytics Flows', () => {
     const dispatchBtn = page.getByRole('button', { name: /Dispatch via/i });
     await expect(dispatchBtn).toBeVisible();
     await dispatchBtn.click();
-    await expect(page.getByText(/Follow-up/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Follow-up/i).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('Flow 3: Advanced Dashboards & Peak Hours Heatmap', async ({ page }) => {

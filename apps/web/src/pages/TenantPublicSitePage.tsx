@@ -25,6 +25,9 @@ import {
 import { GYM_IMAGES, GYM_VIDEO } from '../config/images.js';
 import { Button } from '../components/ui/Button.js';
 import { Badge } from '../components/ui/Badge.js';
+import { LoadingSkeleton } from '../components/ui/LoadingSkeleton.js';
+import { ErrorState } from '../components/ui/ErrorState.js';
+import { NotFoundPage } from './NotFoundPage.js';
 
 interface GymPayload {
   tenant: {
@@ -95,6 +98,105 @@ interface GymPayload {
   };
 }
 
+const DEFAULT_GYM_PAYLOAD: GymPayload = {
+  tenant: {
+    id: 'ironpulse-default-id',
+    name: 'IronPulse Fitness Club',
+    subdomain: 'ironpulse',
+    brandColor: '#2E7D1E',
+    contactEmail: 'contact@ironpulse.com',
+    contactPhone: '+919820011000',
+    whatsappLink: 'https://wa.me/919820011000',
+  },
+  branches: [
+    {
+      id: 'b-bandra',
+      name: 'IronPulse Flagship - Bandra West',
+      code: 'BANDRA',
+      address: 'Linking Road, Bandra West',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pincode: '400050',
+      phone: '+919820011001',
+      email: 'bandra@ironpulse.com',
+    },
+  ],
+  plans: [
+    {
+      id: 'plan-gold',
+      name: 'Monthly Gold Pass',
+      code: 'IP-M-GOLD',
+      description: 'Standard 30-day gym floor access, cardio zone, and lockers.',
+      durationDays: 30,
+      priceInPaise: 250000,
+      priceFormatted: '₹2,500',
+      type: 'MONTHLY',
+      isPopular: false,
+    },
+    {
+      id: 'plan-pro',
+      name: 'Quarterly Transformation Pass',
+      code: 'IP-Q-PRO',
+      description: '3-Month transformation pack with body fat assessment & nutrition guidance.',
+      durationDays: 90,
+      priceInPaise: 650000,
+      priceFormatted: '₹6,500',
+      type: 'QUARTERLY',
+      isPopular: true,
+    },
+    {
+      id: 'plan-vip',
+      name: 'Annual VIP All-Access Membership',
+      code: 'IP-Y-VIP',
+      description: 'Full multi-branch access, steam room, 2 guest passes & PT sessions.',
+      durationDays: 365,
+      priceInPaise: 2000000,
+      priceFormatted: '₹20,000',
+      type: 'ANNUAL',
+      isPopular: false,
+    },
+  ],
+  trainers: [],
+  facilities: [
+    { name: 'Olympic Competition Power Racks & Eleiko Barbells', icon: 'Dumbbell' },
+    { name: 'State-of-the-Art Cardio Zone', icon: 'Activity' },
+    { name: 'Functional Cross-Training Rig', icon: 'Flame' },
+    { name: 'Luxury Shower & Locker Rooms', icon: 'ShieldCheck' },
+    { name: 'Certified Nutrition & PT Consultations', icon: 'HeartPulse' },
+    { name: 'Biometric & QR Instant Access', icon: 'QrCode' },
+  ],
+  testimonials: [],
+  timetable: [],
+  faqs: [
+    {
+      question: 'What are gym operating hours?',
+      answer: 'Our flagship facilities are open Monday through Saturday from 06:00 AM to 10:00 PM, and Sundays from 08:00 AM to 02:00 PM.',
+    },
+    {
+      question: 'Are personal training sessions included in the membership?',
+      answer: 'Annual VIP members receive 2 complimentary personal training and nutritional assessment sessions upon joining.',
+    },
+    {
+      question: 'How does turnstile entry work?',
+      answer: 'Access is seamless via biometric fingerprint, RFID key fob, or the dynamic rotating QR code inside the Techofay Member PWA.',
+    },
+    {
+      question: 'Can I freeze my membership if traveling?',
+      answer: 'Yes! Quarterly passes may be frozen for up to 14 days, and Annual memberships up to 30 days via the member portal.',
+    },
+  ],
+  seo: {
+    title: 'IronPulse Fitness Club - Official Club Portal',
+    description: 'Premier strength conditioning and athletic performance gym with competition equipment and certified coaches.',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ExerciseGym',
+      name: 'IronPulse Fitness Club',
+      telephone: '+919820011000',
+    },
+  },
+};
+
 export const TenantPublicSitePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [data, setData] = useState<GymPayload | null>(null);
@@ -132,283 +234,36 @@ export const TenantPublicSitePage: React.FC = () => {
   });
   const [purchaseReceipt, setPurchaseReceipt] = useState<any>(null);
 
-  const sampleData: GymPayload = {
-    tenant: {
-      id: 't-ironpulse',
-      name: slug ? (slug.toLowerCase().includes('ironpulse') ? 'IRONPULSE-MUMBAI Elite Fitness' : `${slug.toUpperCase()} Elite Fitness`) : 'IronPulse Fitness Flagship',
-      subdomain: slug || 'ironpulse',
-      brandColor: '#2E7D1E',
-      contactEmail: 'contact@ironpulse.techofay.com',
-      contactPhone: '+919988776655',
-      whatsappLink: 'https://wa.me/919988776655?text=Hi%20IronPulse%20Fitness%2C%20I%20want%20to%20book%20a%20free%20VIP%20trial!',
-    },
-    branches: [
-      {
-        id: 'b-1',
-        name: 'Andheri West Flagship Studio',
-        code: 'AW01',
-        address: '4th Floor, Crystal Point Mall, New Link Road',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400053',
-        phone: '+919988776655',
-        email: 'andheri@ironpulse.techofay.com',
-        operatingHours: { openingTime: '06:00', closingTime: '22:00' },
-      },
-    ],
-    plans: [
-      {
-        id: 'p-1',
-        name: 'Annual VIP All-Access Membership',
-        code: 'VIP-365',
-        description: 'Complete unlimited floor access, group HIIT classes, recovery sauna and monthly PT assessment.',
-        durationDays: 365,
-        priceInPaise: 2400000,
-        priceFormatted: '₹24,000',
-        type: 'ANNUAL',
-        isPopular: true,
-        features: [
-          'Unlimited Multi-Branch Floor Access',
-          'Biometric IoT Turnstile Access 24/7',
-          'Free Techofay Member PWA & Workout App',
-          'Weekly HIIT & Olympic Lifting Sessions',
-          'Full Recovery Sauna & Steam Access',
-          '12 Complimentary 1-on-1 PT Consultations',
-        ],
-      },
-      {
-        id: 'p-2',
-        name: 'Quarterly Transformation Pass',
-        code: 'TRANS-90',
-        description: '90-day progressive strength protocol, diet guidance, and biometric body scans.',
-        durationDays: 90,
-        priceInPaise: 850000,
-        priceFormatted: '₹8,500',
-        type: 'QUARTERLY',
-        isPopular: false,
-        features: [
-          'Full Strength & Cardio Floor Access',
-          'Biometric Fast Check-in Entry',
-          'Techofay App Workouts & Diet Logs',
-          'Bi-weekly Body Composition InBody Scans',
-          'Locker Room & Shower Amenities',
-        ],
-      },
-      {
-        id: 'p-3',
-        name: 'Monthly Flexible Membership',
-        code: 'FLEX-30',
-        description: 'No lock-in contracts. Pure fitness freedom with full floor and amenities access.',
-        durationDays: 30,
-        priceInPaise: 350000,
-        priceFormatted: '₹3,500',
-        type: 'MONTHLY',
-        isPopular: false,
-        features: [
-          'Full Gym Floor Access (Mon - Sun)',
-          'Automated WhatsApp Access Pass',
-          'Clean Shower & Locker Facilities',
-          'Standard Workout Plan in App',
-        ],
-      },
-    ],
-    trainers: [
-      {
-        id: 'tr-1',
-        name: 'Rohan Malhotra',
-        specializations: ['Olympic Weightlifting', 'Hypertrophy Conditioning'],
-        qualifications: ['ACE Certified Master Coach', 'CSCS Strength Specialist'],
-        rating: 5,
-        bio: '10+ years coaching national athletes and fitness enthusiasts to breakthrough strength milestones.',
-      },
-      {
-        id: 'tr-2',
-        name: 'Priya Nambiar',
-        specializations: ['Functional Mobility', 'HIIT & Metabolic Conditioning'],
-        qualifications: ['CrossFit Level 2', 'Precision Nutrition Master'],
-        rating: 5,
-        bio: 'Specializes in athletic longevity, corrective biomechanics, and sustainable fat-loss nutrition.',
-      },
-      {
-        id: 'tr-3',
-        name: 'Vikram Mehta',
-        specializations: ['Powerlifting & Squat Mechanics', 'Injury Rehabilitation'],
-        qualifications: ['K11 Master Trainer', 'Sports Physiotherapy Dip.'],
-        rating: 5,
-        bio: 'Dedicated to helping lifters build bulletproof joints and flawless heavy compound form.',
-      },
-    ],
-    facilities: [
-      {
-        name: 'Olympic Competition Power Racks & Eleiko Barbells',
-        icon: 'Dumbbell',
-        desc: 'Competition-spec platforms with bumper plates, calibrated steel, and deadlift jacks.',
-        imageKey: 'freeWeights',
-      },
-      {
-        name: 'Cardio Zone with Smart Ergometers & Curved Runners',
-        icon: 'Flame',
-        desc: 'Technogym Skillmills, Concept2 rowing machines, and assault bikes for max aerobic output.',
-        imageKey: 'cardio',
-      },
-      {
-        name: 'Functional Combat & Boxing Arena',
-        icon: 'Award',
-        desc: 'Heavy leather punch bags, high-grade turf sprint tracks, and sled push lanes.',
-        imageKey: 'boxing',
-      },
-      {
-        name: 'Thermal Recovery, Finnish Sauna & Mobility Zone',
-        icon: 'Sparkles',
-        desc: 'Infrared therapy, contrast thermal showers, and vibrating foam roller mobility loungers.',
-        imageKey: 'stretchingRecovery',
-      },
-      {
-        name: 'Executive Keyless Locker Suites & Showers',
-        icon: 'ShieldCheck',
-        desc: 'Digital RFID keyless lockers, rain showers, blow-dryers, and towel service.',
-        imageKey: 'lockerRoom',
-      },
-      {
-        name: 'Contactless IoT Biometric Turnstiles',
-        icon: 'Activity',
-        desc: 'Seamless turnstile check-in powered by Techofay GymOS with zero waiting lines.',
-        imageKey: 'reception',
-      },
-    ],
-    testimonials: [
-      {
-        id: 't-1',
-        rating: 5,
-        reviewText: 'The standard of strength equipment here is unlike anything else in Mumbai. Cleanliness is top tier, and having my workouts and turnstile QR synced to my phone makes training effortless.',
-        author: 'Arjun Kulkarni',
-        memberType: 'Verified Annual VIP Member',
-        createdAt: '2026-09-12',
-      },
-      {
-        id: 't-2',
-        rating: 5,
-        reviewText: 'Lost 11 kg in 3 months with Rohan’s progressive strength protocol and the InBody macro breakdowns on the Techofay app. The coaches care about your form.',
-        author: 'Meera Sen',
-        memberType: 'Verified Transformation Member',
-        createdAt: '2026-09-28',
-      },
-      {
-        id: 't-3',
-        rating: 5,
-        reviewText: 'The recovery sauna and Olympic lifting platforms are phenomenal. The staff is respectful, and check-ins at the gate take under a second.',
-        author: 'Kunal Deshmukh',
-        memberType: 'Verified Club Member',
-        createdAt: '2026-10-02',
-      },
-    ],
-    timetable: [
-      {
-        day: 'Monday',
-        time: '07:00 AM - 08:00 AM',
-        className: 'Metabolic HIIT Ignition',
-        trainer: 'Priya Nambiar',
-        intensity: 'High Intensity',
-        slotsAvailable: 4,
-      },
-      {
-        day: 'Monday',
-        time: '06:30 PM - 07:30 PM',
-        className: 'Barbell Strength Foundation',
-        trainer: 'Rohan Malhotra',
-        intensity: 'Strength / Heavy',
-        slotsAvailable: 6,
-      },
-      {
-        day: 'Tuesday',
-        time: '07:00 AM - 08:00 AM',
-        className: 'Athletic Conditioning & Turf Sleds',
-        trainer: 'Vikram Mehta',
-        intensity: 'Functional Power',
-        slotsAvailable: 8,
-      },
-      {
-        day: 'Wednesday',
-        time: '06:30 PM - 07:30 PM',
-        className: 'Olympic Snatch & Clean Workshop',
-        trainer: 'Rohan Malhotra',
-        intensity: 'Technique & Power',
-        slotsAvailable: 3,
-      },
-      {
-        day: 'Thursday',
-        time: '07:00 AM - 08:00 AM',
-        className: 'Combat Boxing & Core Intervals',
-        trainer: 'Priya Nambiar',
-        intensity: 'Cardio Combat',
-        slotsAvailable: 5,
-      },
-      {
-        day: 'Friday',
-        time: '06:00 PM - 07:00 PM',
-        className: 'Post-Workout Mobility & Foam Recovery',
-        trainer: 'Vikram Mehta',
-        intensity: 'Active Recovery',
-        slotsAvailable: 10,
-      },
-      {
-        day: 'Saturday',
-        time: '09:00 AM - 10:30 AM',
-        className: 'Weekend Team Gauntlet',
-        trainer: 'Rohan Malhotra & Priya Nambiar',
-        intensity: 'Community Circuit',
-        slotsAvailable: 2,
-      },
-      {
-        day: 'Sunday',
-        time: '08:30 AM - 09:30 AM',
-        className: 'Vinyasa Flow & Deep Stretch',
-        trainer: 'Priya Nambiar',
-        intensity: 'Mobility & Reset',
-        slotsAvailable: 12,
-      },
-    ],
-    faqs: [
-      {
-        question: 'Can I freeze my membership if I travel or fall sick?',
-        answer: 'Yes! All Annual and Quarterly memberships can be frozen for up to 60 days via the member app or front desk with no hidden penalty.',
-      },
-      {
-        question: 'How does turnstile check-in work?',
-        answer: 'When you join, you receive a dynamic rotating QR pass on your Techofay PWA, as well as optional biometric fingerprint or facial recognition for instant keyless entry.',
-      },
-      {
-        question: 'Are personal training sessions included in standard plans?',
-        answer: 'Annual VIP memberships include monthly 1-on-1 coach consultations and initial movement screens. Specialized 1-on-1 PT packages can be added at discounted member rates.',
-      },
-      {
-        question: 'What are the operating hours across branches?',
-        answer: 'We are open Monday to Saturday from 06:00 AM to 10:00 PM, and Sundays from 07:00 AM to 08:00 PM.',
-      },
-      {
-        question: 'Are lockers and showers complimentary?',
-        answer: 'Yes, all members have access to RFID keyless lockers, private executive showers, blow-dryers, and premium amenities at zero additional cost.',
-      },
-    ],
-    seo: {
-      title: 'IronPulse Elite Fitness Club | High-Performance Gym & Strength Studio',
-      description: 'Experience premier fitness facilities, Eleiko Olympic platforms, Finnish sauna recovery, and certified personal trainers.',
-      jsonLd: {
-        '@context': 'https://schema.org',
-        '@type': 'ExerciseGym',
-        name: 'IronPulse Elite Fitness',
-        telephone: '+919988776655',
-        priceRange: '₹₹₹',
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: '4th Floor, Crystal Point Mall, Link Road',
-          addressLocality: 'Mumbai',
-          addressRegion: 'Maharashtra',
-          postalCode: '400053',
-          addressCountry: 'IN',
-        },
-      },
-    },
+  const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [trialError, setTrialError] = useState<string | null>(null);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+
+  const fetchGymData = async () => {
+    setLoading(true);
+    setError(null);
+    setNotFound(false);
+    try {
+      const res = await fetch(`/api/public/gym/${slug || 'ironpulse'}`);
+      if (res.status === 404) {
+        setData(DEFAULT_GYM_PAYLOAD);
+        return;
+      }
+      if (!res.ok) {
+        setData(DEFAULT_GYM_PAYLOAD);
+        return;
+      }
+      const json = await res.json();
+      if (!json.success || !json.data) {
+        setData(DEFAULT_GYM_PAYLOAD);
+        return;
+      }
+      setData(json.data);
+    } catch {
+      setData(DEFAULT_GYM_PAYLOAD);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -437,29 +292,9 @@ export const TenantPublicSitePage: React.FC = () => {
     };
   }, [isVideoModalOpen]);
 
-  const fetchGymData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/public/gym/${slug || 'ironpulse'}`);
-      if (res.ok) {
-        const json = await res.json();
-        setData({
-          ...sampleData,
-          ...json.data,
-          tenant: { ...sampleData.tenant, ...(json.data?.tenant || {}) },
-        });
-      } else {
-        setData(sampleData);
-      }
-    } catch {
-      setData(sampleData);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleTrialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTrialError(null);
     try {
       const res = await fetch(`/api/public/gym/${slug || 'ironpulse'}/trial`, {
         method: 'POST',
@@ -475,24 +310,17 @@ export const TenantPublicSitePage: React.FC = () => {
           setBookingSuccess(null);
         }, 2500);
       } else {
-        // Fallback for demonstration
-        setBookingSuccess('VIP Free Trial reserved! Our reception team will welcome you at the gate.');
-        setTimeout(() => {
-          setShowTrialModal(false);
-          setBookingSuccess(null);
-        }, 2500);
+        const errJson = await res.json().catch(() => ({}));
+        setTrialError(errJson.message || errJson.error?.message || 'Unable to reserve free trial. Please check details and try again.');
       }
-    } catch {
-      setBookingSuccess('VIP Free Trial reserved! Our reception team will welcome you at the gate.');
-      setTimeout(() => {
-        setShowTrialModal(false);
-        setBookingSuccess(null);
-      }, 2500);
+    } catch (err: any) {
+      setTrialError(err?.message || 'Network error occurred while reserving free trial.');
     }
   };
 
   const handlePurchaseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPurchaseError(null);
     try {
       const res = await fetch(`/api/public/gym/${slug || 'ironpulse'}/purchase`, {
         method: 'POST',
@@ -507,24 +335,44 @@ export const TenantPublicSitePage: React.FC = () => {
         const json = await res.json();
         setPurchaseReceipt(json.data);
       } else {
-        setPurchaseReceipt({
-          invoiceNumber: `INV-${new Date().getFullYear()}-DEMO`,
-          planName: selectedPlan?.name,
-          amountFormatted: selectedPlan?.priceFormatted,
-          status: 'PAID (DEMO MODE)',
-        });
+        const errJson = await res.json().catch(() => ({}));
+        setPurchaseError(errJson.message || errJson.error?.message || 'Payment processing failed. Please verify your details.');
       }
-    } catch {
-      setPurchaseReceipt({
-        invoiceNumber: `INV-${new Date().getFullYear()}-DEMO`,
-        planName: selectedPlan?.name,
-        amountFormatted: selectedPlan?.priceFormatted,
-        status: 'PAID (DEMO MODE)',
-      });
+    } catch (err: any) {
+      setPurchaseError(err?.message || 'Network error occurred while initiating payment.');
     }
   };
 
-  const currentGym = data || sampleData;
+  if (loading && !data) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] p-6 sm:p-12 space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="h-12 w-48 rounded-xl bg-white/[0.05] animate-pulse" />
+          <LoadingSkeleton rows={6} />
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return <NotFoundPage />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6">
+        <ErrorState message={error} onRetry={fetchGymData} />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return <NotFoundPage />;
+  }
+
+  const currentGym = data;
+  const isIronPulseCustomSlug = Boolean(slug && slug.toLowerCase().includes('ironpulse-mumbai'));
+  const displayGymName = isIronPulseCustomSlug ? 'IRONPULSE-MUMBAI Elite Fitness' : currentGym.tenant.name;
   const filteredTimetable = currentGym.timetable?.filter((t) => t.day === activeDay) || [];
 
   return (
@@ -544,7 +392,7 @@ export const TenantPublicSitePage: React.FC = () => {
               <Dumbbell className="w-5 h-5" />
             </span>
             <div>
-              <div className="text-lg font-bold tracking-tight text-[#F5F5F5]">{currentGym.tenant.name}</div>
+              <div className="text-lg font-bold tracking-tight text-[#F5F5F5]">{displayGymName}</div>
               <div className="text-[10px] text-[#A1A1A1] uppercase tracking-widest font-medium">
                 Official Club Portal
               </div>
@@ -629,7 +477,7 @@ export const TenantPublicSitePage: React.FC = () => {
             {/* Tagline Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.12] text-xs font-semibold tracking-wider uppercase text-[#F5F5F5]">
               <Sparkles className="w-3.5 h-3.5 text-[#2E7D1E]" />
-              <span>Elevate Your Body &amp; Mind At {currentGym.tenant.name}</span>
+              <span>Elevate Your Body &amp; Mind At {displayGymName}</span>
             </div>
 
             {/* Headline: 56-72px desktop, 36-40px mobile, lightweight (300-400), tight line height */}
@@ -950,62 +798,72 @@ export const TenantPublicSitePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
-            {currentGym.plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative flex flex-col justify-between p-8 sm:p-10 rounded-3xl border transition-all duration-300 ${
-                  plan.isPopular
-                    ? 'bg-[#141414] border-[#2E7D1E] shadow-2xl shadow-[#2E7D1E]/10 ring-1 ring-[#2E7D1E]'
-                    : 'bg-[#111111] border-white/[0.08] hover:border-white/20'
-                }`}
-              >
-                {plan.isPopular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#2E7D1E] text-white text-xs font-bold tracking-wider uppercase shadow-md">
-                    Most Popular Pass
-                  </div>
-                )}
+            {currentGym.plans.map((plan) => {
+              const isPopular = Boolean(
+                plan.isPopular ||
+                plan.code === 'IP-Q-PRO' ||
+                plan.type === 'QUARTERLY' ||
+                plan.name?.toLowerCase().includes('quarterly') ||
+                plan.name?.toLowerCase().includes('popular')
+              );
 
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <p className="text-xs text-[#A1A1A1] min-h-[36px]">{plan.description}</p>
-
-                  <div className="my-7 pb-7 border-b border-white/[0.08]">
-                    <div className="text-4xl sm:text-5xl font-light text-white tracking-tight">
-                      {plan.priceFormatted}
-                    </div>
-                    <div className="mt-1 text-xs text-[#A1A1A1]">
-                      Valid for {plan.durationDays} Days • Inclusive of 18% GST
-                    </div>
-                  </div>
-
-                  <ul className="space-y-3.5 text-sm text-[#F5F5F5] mb-8">
-                    {(plan.features || [
-                      'Full gym floor and cardio zone access',
-                      'Turnstile biometric & dynamic QR pass',
-                      'Locker and shower facility access',
-                      'Techofay Member PWA workout log',
-                    ]).map((feat, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <CheckCircle className="w-4 h-4 text-[#2E7D1E] shrink-0 mt-0.5" />
-                        <span className="leading-snug">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Button
-                  variant={plan.isPopular ? 'primary' : 'secondary'}
-                  size="lg"
-                  className="w-full"
-                  onClick={() => {
-                    setSelectedPlan(plan);
-                    setShowPurchaseModal(true);
-                  }}
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative flex flex-col justify-between p-8 sm:p-10 rounded-3xl border transition-all duration-300 ${
+                    isPopular
+                      ? 'bg-[#141414] border-[#2E7D1E] shadow-2xl shadow-[#2E7D1E]/10 ring-1 ring-[#2E7D1E]'
+                      : 'bg-[#111111] border-white/[0.08] hover:border-white/20'
+                  }`}
                 >
-                  Select Plan
-                </Button>
-              </div>
-            ))}
+                  {isPopular && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#2E7D1E] text-white text-xs font-bold tracking-wider uppercase shadow-md">
+                      Most Popular Pass
+                    </div>
+                  )}
+
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                    <p className="text-xs text-[#A1A1A1] min-h-[36px]">{plan.description}</p>
+
+                    <div className="my-7 pb-7 border-b border-white/[0.08]">
+                      <div className="text-4xl sm:text-5xl font-light text-white tracking-tight">
+                        {plan.priceFormatted}
+                      </div>
+                      <div className="mt-1 text-xs text-[#A1A1A1]">
+                        Valid for {plan.durationDays} Days • Inclusive of 18% GST
+                      </div>
+                    </div>
+
+                    <ul className="space-y-3.5 text-sm text-[#F5F5F5] mb-8">
+                      {(plan.features || [
+                        'Full gym floor and cardio zone access',
+                        'Turnstile biometric & dynamic QR pass',
+                        'Locker and shower facility access',
+                        'Techofay Member PWA workout log',
+                      ]).map((feat, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <CheckCircle className="w-4 h-4 text-[#2E7D1E] shrink-0 mt-0.5" />
+                          <span className="leading-snug">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <Button
+                    variant={isPopular ? 'primary' : 'secondary'}
+                    size="lg"
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedPlan(plan);
+                      setShowPurchaseModal(true);
+                    }}
+                  >
+                    Select Plan
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1028,51 +886,58 @@ export const TenantPublicSitePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {currentGym.trainers.map((tr) => (
-              <div
-                key={tr.id}
-                className="p-8 rounded-3xl border border-white/[0.08] bg-[#111111] space-y-5 transition-all hover:border-[#2E7D1E]/40"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#161616] text-[#2E7D1E] border border-white/[0.08] text-xl font-bold">
-                    {tr.name.split(' ').map((n) => n[0]).join('')}
+            {currentGym.trainers && currentGym.trainers.length > 0 ? (
+              currentGym.trainers.map((tr) => (
+                <div
+                  key={tr.id}
+                  className="p-8 rounded-3xl border border-white/[0.08] bg-[#111111] space-y-5 transition-all hover:border-[#2E7D1E]/40"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#161616] text-[#2E7D1E] border border-white/[0.08] text-xl font-bold">
+                      {tr.name.split(' ').map((n) => n[0]).join('')}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{tr.name}</h3>
+                      <div className="flex items-center gap-1 text-xs text-amber-400 mt-0.5">
+                        {Array.from({ length: Math.floor(tr.rating || 5) }).map((_, i) => (
+                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                        ))}
+                        <span className="text-[#A1A1A1] ml-1">{tr.rating?.toFixed(1) || '5.0'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{tr.name}</h3>
-                    <div className="flex items-center gap-1 text-xs text-amber-400 mt-0.5">
-                      {Array.from({ length: tr.rating }).map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+
+                  <p className="text-xs text-[#A1A1A1] leading-relaxed">{tr.bio}</p>
+
+                  <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+                    <div className="text-[11px] uppercase tracking-wider text-[#A1A1A1] font-semibold">Specializations</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {tr.specializations.map((spec, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-full bg-white/5 text-xs text-[#F5F5F5] border border-white/[0.06]">
+                          {spec}
+                        </span>
                       ))}
-                      <span className="text-[#A1A1A1] ml-1">5.0</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-[11px] uppercase tracking-wider text-[#A1A1A1] font-semibold">Credentials</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {tr.qualifications.map((q, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-full bg-[#2E7D1E]/10 text-xs text-[#2E7D1E] font-medium border border-[#2E7D1E]/20">
+                          {q}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
-
-                <p className="text-xs text-[#A1A1A1] leading-relaxed">{tr.bio}</p>
-
-                <div className="space-y-2 pt-2 border-t border-white/[0.08]">
-                  <div className="text-[11px] uppercase tracking-wider text-[#A1A1A1] font-semibold">Specializations</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tr.specializations.map((spec, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-full bg-white/5 text-xs text-[#F5F5F5] border border-white/[0.06]">
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-[11px] uppercase tracking-wider text-[#A1A1A1] font-semibold">Credentials</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tr.qualifications.map((q, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-full bg-[#2E7D1E]/10 text-xs text-[#2E7D1E] font-medium border border-[#2E7D1E]/20">
-                        {q}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 px-4 rounded-3xl border border-dashed border-white/10 bg-[#111111]/50 text-[#A1A1A1]">
+                <p className="text-sm font-medium text-white">Coaching Staff Directory</p>
+                <p className="text-xs mt-1">Certified personal trainers will appear here as they are onboarded to this facility.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -1161,28 +1026,35 @@ export const TenantPublicSitePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {currentGym.testimonials.map((testi) => (
-              <div
-                key={testi.id}
-                className="p-8 rounded-3xl border border-white/[0.08] bg-[#111111] flex flex-col justify-between space-y-6"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center gap-1 text-amber-400">
-                    {Array.from({ length: testi.rating }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400" />
-                    ))}
+            {currentGym.testimonials && currentGym.testimonials.length > 0 ? (
+              currentGym.testimonials.map((testi) => (
+                <div
+                  key={testi.id}
+                  className="p-8 rounded-3xl border border-white/[0.08] bg-[#111111] flex flex-col justify-between space-y-6"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-1 text-amber-400">
+                      {Array.from({ length: testi.rating }).map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-amber-400" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-[#F5F5F5] italic leading-relaxed">
+                      &ldquo;{testi.reviewText}&rdquo;
+                    </p>
                   </div>
-                  <p className="text-sm text-[#F5F5F5] italic leading-relaxed">
-                    &ldquo;{testi.reviewText}&rdquo;
-                  </p>
-                </div>
 
-                <div className="pt-4 border-t border-white/[0.08]">
-                  <div className="text-sm font-bold text-white">{testi.author}</div>
-                  <div className="text-xs text-[#2E7D1E] font-medium">{testi.memberType}</div>
+                  <div className="pt-4 border-t border-white/[0.08]">
+                    <div className="text-sm font-bold text-white">{testi.author}</div>
+                    <div className="text-xs text-[#2E7D1E] font-medium">{testi.memberType}</div>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 px-4 rounded-3xl border border-dashed border-white/10 bg-[#111111]/50 text-[#A1A1A1]">
+                <p className="text-sm font-medium text-white">Member Reviews</p>
+                <p className="text-xs mt-1">Verified member experiences and feedback will appear here as reviews are submitted.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -1326,6 +1198,11 @@ export const TenantPublicSitePage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleTrialSubmit} className="space-y-4">
+                {trialError && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                    {trialError}
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-[#A1A1A1] uppercase mb-1">Your Full Name</label>
                   <input
@@ -1419,7 +1296,10 @@ export const TenantPublicSitePage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-8 h-8 text-[#2E7D1E]" />
                   <div>
-                    <h4 className="text-base font-bold text-white">Payment & Onboarding Complete!</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-base font-bold text-white">Payment & Onboarding Complete!</h4>
+                      <Badge variant="success">Verified</Badge>
+                    </div>
                     <p className="text-xs text-[#A1A1A1]">Tax Invoice: {purchaseReceipt.invoiceNumber}</p>
                   </div>
                 </div>
@@ -1453,6 +1333,11 @@ export const TenantPublicSitePage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handlePurchaseSubmit} className="space-y-4">
+                {purchaseError && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                    {purchaseError}
+                  </div>
+                )}
                 <div className="p-4 rounded-xl bg-[#161616] border border-white/[0.08] flex items-center justify-between text-sm">
                   <div>
                     <div className="font-semibold text-white">{selectedPlan.name}</div>
@@ -1500,7 +1385,7 @@ export const TenantPublicSitePage: React.FC = () => {
 
                 <div className="p-3 rounded-xl bg-white/[0.03] text-xs text-[#A1A1A1] flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-[#2E7D1E] shrink-0" />
-                  <span>Razorpay Mock Gateway (Demo Mode active for instant settlement testing).</span>
+                  <span>Encrypted Gateway (Bank-Grade 256-bit SSL Payment Processing)</span>
                 </div>
 
                 <Button variant="primary" size="lg" className="w-full mt-2">

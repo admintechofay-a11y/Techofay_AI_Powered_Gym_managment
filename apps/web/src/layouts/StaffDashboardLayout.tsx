@@ -95,11 +95,7 @@ export const StaffDashboardLayout: React.FC = () => {
     navigate('/login');
   };
 
-  const notifications = [
-    { id: '1', title: 'Payment Received', desc: '₹4,500 via UPI from Aarav Patel', time: '10m ago' },
-    { id: '2', title: 'Plan Expiring', desc: 'Sneha Rao annual plan expires in 3 days', time: '1h ago' },
-    { id: '3', title: 'Live Capacity Warning', desc: 'Floor reached 85% maximum safe capacity', time: '2h ago' },
-  ];
+  const notifications: { id: string; title: string; desc: string; time: string }[] = [];
 
   const commandItems = [
     { title: 'Go to Dashboard', path: '/dashboard', category: 'Navigation' },
@@ -291,25 +287,35 @@ export const StaffDashboardLayout: React.FC = () => {
                 aria-label="View notifications"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background animate-pulse" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background animate-pulse" />
+                )}
               </button>
 
               {notificationsOpen && (
                 <div className="absolute right-0 mt-2 w-80 rounded-xl border border-border bg-card shadow-xl p-3 z-50">
                   <div className="flex items-center justify-between pb-2 border-b border-border">
                     <span className="text-xs font-semibold text-foreground">Notifications</span>
-                    <Badge variant="info" size="sm">
-                      3 New
-                    </Badge>
+                    {notifications.length > 0 ? (
+                      <Badge variant="info" size="sm">
+                        {notifications.length} New
+                      </Badge>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">All caught up</span>
+                    )}
                   </div>
                   <div className="divide-y divide-border/60 py-1">
-                    {notifications.map((n) => (
-                      <div key={n.id} className="py-2 px-1">
-                        <p className="text-xs font-medium text-foreground">{n.title}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{n.desc}</p>
-                        <span className="text-[10px] text-muted-foreground/70">{n.time}</span>
-                      </div>
-                    ))}
+                    {notifications.length > 0 ? (
+                      notifications.map((n) => (
+                        <div key={n.id} className="py-2 px-1">
+                          <p className="text-xs font-medium text-foreground">{n.title}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{n.desc}</p>
+                          <span className="text-[10px] text-muted-foreground/70">{n.time}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-4">No unread notifications</p>
+                    )}
                   </div>
                 </div>
               )}

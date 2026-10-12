@@ -11,6 +11,7 @@ export interface CheckInRequest {
   method: keyof typeof ATTENDANCE_METHOD;
   deviceId?: string;
   performedByUserId?: string;
+  allowOverride?: boolean;
 }
 
 export class AttendanceService {
@@ -53,7 +54,7 @@ export class AttendanceService {
     }
 
     // 2. Verification rules
-    if (member.status === MEMBER_STATUS.SUSPENDED) {
+    if (member.status === MEMBER_STATUS.SUSPENDED && !input.allowOverride) {
       return {
         allowed: false,
         reason: 'Access Denied: Member account is suspended due to payment or administrative hold.',
@@ -67,7 +68,7 @@ export class AttendanceService {
       memberId: member._id,
       status: MEMBERSHIP_STATUS.FROZEN,
     });
-    if (frozenMembership) {
+    if (frozenMembership && !input.allowOverride) {
       return {
         allowed: false,
         reason: 'Access Denied: Membership is currently frozen. Please unfreeze at reception to enter.',
@@ -85,7 +86,7 @@ export class AttendanceService {
       endDate: { $gte: now },
     });
 
-    if (!activeMembership) {
+    if (!activeMembership && !input.allowOverride) {
       // Check if recently expired
       const expiredMembership = await Membership.findOne({
         tenantId: tenantObjectId,
@@ -108,7 +109,7 @@ export class AttendanceService {
       checkInTime: { $gte: new Date(Date.now() - 3 * 60 * 60 * 1000) },
     });
 
-    if (activeSession) {
+    if (activeSession && !input.allowOverride) {
       return {
         allowed: false,
         reason: `Passback Warning: Member is already registered inside gym floor (Checked in at ${activeSession.checkInTime.toLocaleTimeString()}).`,

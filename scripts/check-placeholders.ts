@@ -8,6 +8,13 @@ const FORBIDDEN_PATTERNS = [
   /\bcoming\s+soon\b/i,
   /\bexample\.com\b/i,
   /\btest@test\b/i,
+  /\bfor demonstration\b/i,
+];
+
+const WEB_SRC_FORBIDDEN_PATTERNS = [
+  /\bsample[A-Z]\w*/,
+  /\bSAMPLE_[A-Z0-9_]+\b/,
+  /\bMath\.random\(\)/,
 ];
 
 const IGNORED_DIRS = new Set([
@@ -53,8 +60,13 @@ function scanDir(dir: string) {
       const content = fs.readFileSync(fullPath, 'utf-8');
       const lines = content.split('\n');
 
+      const isWebSrc = fullPath.replace(/\\/g, '/').includes('apps/web/src');
+      const activePatterns = isWebSrc
+        ? [...FORBIDDEN_PATTERNS, ...WEB_SRC_FORBIDDEN_PATTERNS]
+        : FORBIDDEN_PATTERNS;
+
       lines.forEach((line, index) => {
-        for (const pattern of FORBIDDEN_PATTERNS) {
+        for (const pattern of activePatterns) {
           if (pattern.test(line)) {
             console.error(
               `[PLACEHOLDER VIOLATION] ${fullPath}:${index + 1} matches forbidden pattern ${pattern}`,

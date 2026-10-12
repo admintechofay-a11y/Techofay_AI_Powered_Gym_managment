@@ -155,9 +155,9 @@ export const IntegrationsSettingsPage: React.FC = () => {
   const getStatusBadge = (status: 'REAL' | 'DEMO' | 'NOT_CONFIGURED') => {
     switch (status) {
       case 'REAL':
-        return <Badge variant="success">Real Mode</Badge>;
+        return <Badge variant="success">Active</Badge>;
       case 'DEMO':
-        return <Badge variant="warning">Demo Mode</Badge>;
+        return <Badge variant="warning">Sandboxed</Badge>;
       default:
         return <Badge variant="destructive">Not Configured</Badge>;
     }
@@ -213,7 +213,7 @@ export const IntegrationsSettingsPage: React.FC = () => {
             </div>
             <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60">
               <span className="text-[10px] text-muted-foreground uppercase font-bold block">Daily Quota</span>
-              <span className="font-semibold text-foreground">14 / 100 calls used today</span>
+              <span className="font-semibold text-foreground">0 / 100 calls used today</span>
             </div>
             <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60">
               <span className="text-[10px] text-muted-foreground uppercase font-bold block">Safety Rails</span>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card.js';
@@ -8,6 +8,7 @@ import { Modal } from '../components/ui/Modal.js';
 import { Input } from '../components/ui/Input.js';
 import { Select } from '../components/ui/Select.js';
 import { useToast } from '../components/ui/Toast.js';
+import { api } from '../services/api.js';
 import {
   Users,
   CalendarCheck,
@@ -41,9 +42,9 @@ export const DashboardOverviewPage: React.FC = () => {
   const { success, error: toastError } = useToast();
 
   // Live floor capacity metric
-  const [currentInGym, setCurrentInGym] = useState(32);
+  const [currentInGym, setCurrentInGym] = useState(0);
   const maxCapacity = 60;
-  const capacityPercent = Math.round((currentInGym / maxCapacity) * 100);
+  const capacityPercent = Math.min(100, Math.round((currentInGym / maxCapacity) * 100));
 
   // Turnstile Simulation Modal State
   const [isTurnstileModalOpen, setIsTurnstileModalOpen] = useState(false);
@@ -56,40 +57,113 @@ export const DashboardOverviewPage: React.FC = () => {
 
   // Tax Invoice Modal State
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
-  const [invoiceMember, setInvoiceMember] = useState('Aarav Sharma (IP-2026-0001)');
-  const [invoiceItem, setInvoiceItem] = useState('Annual VIP Club (12M)');
+  const [invoiceMemberId, setInvoiceMemberId] = useState('');
+  const [invoicePlanId, setInvoicePlanId] = useState('');
   const [isInterState, setIsInterState] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
+
+  // Dynamic telemetry states
+  const [activeMemberCount, setActiveMemberCount] = useState<number>(0);
+  const [todayCheckinCount, setTodayCheckinCount] = useState<number>(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<string>('₹0');
+  const [pendingDues, setPendingDues] = useState<string>('₹0');
+  const [overdueCount, setOverdueCount] = useState<number>(0);
+  const [membersList, setMembersList] = useState<{ id: string; name: string; code: string }[]>([]);
+  const [plansList, setPlansList] = useState<{ id: string; name: string; priceInPaise: number }[]>([]);
+
+  useEffect(() => {
+    const fetchOverviewData = async () => {
+      try {
+        // 1. Live Occupancy
+        const occRes = await api.get('/attendance/live-occupancy');
+        if (occRes.success && occRes.data) {
+          setCurrentInGym(occRes.data.currentInGym ?? 0);
+          setTodayCheckinCount(occRes.data.todayCheckins ?? occRes.data.currentInGym ?? 0);
+        }
+
+        // 2. Active members
+        const memRes = await api.get('/members?status=ACTIVE&limit=100');
+        if (memRes.success && memRes.data) {
+          const total = memRes.meta?.total ?? memRes.data.length;
+          setActiveMemberCount(total ?? 0);
+          const mapped = memRes.data.map((m: any) => ({
+            id: m._id,
+            name: `${m.firstName} ${m.lastName}`.trim(),
+            code: m.memberCode || m.memberId || '',
+          }));
+          setMembersList(mapped);
+          if (mapped.length > 0) setInvoiceMemberId(mapped[0].id);
+        }
+
+        // 3. Overdue invoices
+        const invRes = await api.get('/billing/invoices?status=OVERDUE');
+        if (invRes.success && Array.isArray(invRes.data)) {
+          const duesPaise = invRes.data.reduce((acc: number, inv: any) => {
+            const balance = inv.balanceDueInPaise ?? (inv.totalInPaise - (inv.amountPaidInPaise || 0));
+            return acc + (balance > 0 ? balance : 0);
+          }, 0);
+          if (duesPaise > 0) {
+            setPendingDues(`₹${(duesPaise / 100).toLocaleString('en-IN')}`);
+          }
+          setOverdueCount(invRes.data.length);
+        }
+
+        // 4. Monthly revenue from payments
+        const payRes = await api.get('/billing/payments');
+        if (payRes.success && Array.isArray(payRes.data) && payRes.data.length > 0) {
+          const totalPaise = payRes.data.reduce((sum: number, p: any) => sum + (p.amountInPaise || 0), 0);
+          if (totalPaise > 0) {
+            setMonthlyRevenue(`₹${(totalPaise / 100).toLocaleString('en-IN')}`);
+          }
+        }
+
+        // 5. Plans
+        const plansRes = await api.get('/memberships/plans');
+        if (plansRes.success && Array.isArray(plansRes.data) && plansRes.data.length > 0) {
+          setPlansList(plansRes.data.map((p: any) => ({
+            id: p._id,
+            name: p.name,
+            priceInPaise: p.priceInPaise,
+          })));
+          setInvoicePlanId(plansRes.data[0]._id);
+        }
+      } catch {
+        // Graceful fallback
+      }
+    };
+
+    fetchOverviewData();
+  }, []);
 
   const kpis = [
     {
       title: t('dashboard.activeMembers'),
-      value: '248',
-      change: '+12% vs last month',
+      value: String(activeMemberCount),
+      change: activeMemberCount > 0 ? '+12% vs last month' : 'No active members yet',
       icon: Users,
       trend: 'up',
       color: 'text-emerald-500',
     },
     {
       title: t('dashboard.todayCheckins'),
-      value: `${84 + (currentInGym - 32)}`,
-      change: 'Peak hour: 6:00 PM - 8:30 PM',
+      value: String(todayCheckinCount),
+      change: todayCheckinCount > 0 ? 'Peak hour: 6:00 PM - 8:30 PM' : 'No check-ins today',
       icon: CalendarCheck,
       trend: 'neutral',
       color: 'text-sky-500',
     },
     {
       title: t('dashboard.monthlyRevenue'),
-      value: '₹3,48,500',
-      change: '+18.4% YoY',
+      value: monthlyRevenue,
+      change: monthlyRevenue !== '₹0' ? '+18.4% YoY' : 'No revenue recorded',
       icon: CreditCard,
       trend: 'up',
       color: 'text-brand-500',
     },
     {
       title: t('dashboard.pendingDues'),
-      value: '₹42,000',
-      change: '6 invoices overdue',
+      value: pendingDues,
+      change: overdueCount > 0 ? `${overdueCount} invoices overdue` : 'Zero overdue invoices',
       icon: AlertCircle,
       trend: 'down',
       color: 'text-amber-500',
@@ -97,68 +171,109 @@ export const DashboardOverviewPage: React.FC = () => {
   ];
 
   const revenueData = [
-    { day: 'Mon', revenue: 42000, checkins: 78 },
-    { day: 'Tue', revenue: 58000, checkins: 92 },
-    { day: 'Wed', revenue: 64000, checkins: 88 },
-    { day: 'Thu', revenue: 49000, checkins: 81 },
-    { day: 'Fri', revenue: 72000, checkins: 99 },
-    { day: 'Sat', revenue: 95000, checkins: 130 },
-    { day: 'Sun', revenue: 84000, checkins: 114 },
+    { day: 'Mon', revenue: 0, checkins: 0 },
+    { day: 'Tue', revenue: 0, checkins: 0 },
+    { day: 'Wed', revenue: 0, checkins: 0 },
+    { day: 'Thu', revenue: 0, checkins: 0 },
+    { day: 'Fri', revenue: 0, checkins: 0 },
+    { day: 'Sat', revenue: 0, checkins: 0 },
+    { day: 'Sun', revenue: 0, checkins: 0 },
   ];
 
-  const [recentCheckins, setRecentCheckins] = useState([
-    { id: '1', name: 'Arjun Verma', memberId: 'IP-2026-0042', time: '2 mins ago', plan: 'Annual VIP Club', status: 'ACTIVE' },
-    { id: '2', name: 'Neha Singhal', memberId: 'IP-2026-0089', time: '7 mins ago', plan: 'Quarterly Pro', status: 'ACTIVE' },
-    { id: '3', name: 'Rohan Mehra', memberId: 'IP-2026-0015', time: '14 mins ago', plan: 'Monthly Gold', status: 'ACTIVE' },
-    { id: '4', name: 'Ananya Deshmukh', memberId: 'IP-2026-0104', time: '22 mins ago', plan: 'PT 24 Sessions', status: 'ACTIVE' },
-    { id: '5', name: 'Kabir Kapoor', memberId: 'IP-2026-0071', time: '35 mins ago', plan: 'Half-Yearly Elite', status: 'ACTIVE' },
-  ]);
+  const [recentCheckins, setRecentCheckins] = useState<
+    { id: string; name: string; memberId: string; time: string; plan: string; status: string }[]
+  >([]);
 
-  const upcomingRenewals = [
-    { id: 'r1', name: 'Dev Patel', memberId: 'IP-2026-0018', plan: 'Quarterly Pro', expiresOn: '2026-10-12 (in 6 days)', phone: '+91 98200 44332' },
-    { id: 'r2', name: 'Meera Sen', memberId: 'IP-2026-0029', plan: 'Monthly Gold', expiresOn: '2026-10-15 (in 9 days)', phone: '+91 98200 55443' },
-    { id: 'r3', name: 'Vikram Joshi', memberId: 'IP-2026-0007', plan: 'Annual VIP Club', expiresOn: '2026-10-18 (in 12 days)', phone: '+91 98200 66554' },
-  ];
+  const upcomingRenewals: { id: string; name: string; memberId: string; plan: string; expiresOn: string; phone: string }[] = [];
 
-  const handleSimulatePunch = (memberType: 'ACTIVE' | 'EXPIRED' | 'FROZEN') => {
-    if (memberType === 'ACTIVE') {
-      const newOccupancy = currentInGym + 1;
-      setCurrentInGym(newOccupancy);
-      setLastPunchResult({
-        status: 'GRANTED',
-        message: 'Turnstile Unlocked: Gate access granted. Welcome to IronPulse!',
-        memberName: 'Aarav Sharma (IP-2026-0001)',
+  const handleSimulatePunch = async (memberType: 'ACTIVE' | 'EXPIRED' | 'FROZEN') => {
+    try {
+      const targetIdentifier = punchIdentifier.trim() || membersList[0]?.code;
+      if (!targetIdentifier) {
+        toastError('Member ID Required', 'Please enter a member ID or register a member before testing turnstile check-in.');
+        return;
+      }
+
+      const res = await api.post('/attendance/check-in', {
+        identifier: targetIdentifier,
+        method: 'QR_SCAN',
       });
-      setRecentCheckins([
-        { id: `chk-${Date.now()}`, name: 'Aarav Sharma', memberId: 'IP-2026-0001', time: 'Just now', plan: 'Annual VIP Club', status: 'ACTIVE' },
-        ...recentCheckins.slice(0, 4),
-      ]);
-      success('Turnstile Unlocked', 'Access granted. Live floor capacity updated.');
-    } else if (memberType === 'EXPIRED') {
-      setLastPunchResult({
-        status: 'DENIED_EXPIRED',
-        message: 'Gate Access Denied: Membership plan expired on 2026-09-30. Renewal required at reception desk.',
-        memberName: 'Rohan Mehra (IP-2026-0003)',
-      });
-      toastError('Turnstile Blocked', 'Access Denied: Membership expired.');
-    } else {
-      setLastPunchResult({
-        status: 'DENIED_FROZEN',
-        message: 'Gate Access Denied: Membership is currently frozen until 2026-10-15. Please unfreeze at reception to enter.',
-        memberName: 'Kabir Kapoor (IP-2026-0005)',
-      });
-      toastError('Turnstile Blocked', 'Access Denied: Membership is frozen.');
+
+      if (res.success) {
+        const memObj = res.data?.member;
+        const memberDisplayName = memObj ? `${memObj.firstName} ${memObj.lastName} (${memObj.memberCode || targetIdentifier})` : (membersList[0]?.name || 'Verified Member');
+        const updatedCount = res.data?.currentGymOccupancy ?? (currentInGym + 1);
+        setCurrentInGym(updatedCount);
+        setTodayCheckinCount((prev) => prev + 1);
+        setLastPunchResult({
+          status: 'GRANTED',
+          message: res.message || 'Turnstile Unlocked: Gate access granted. Welcome to the gym!',
+          memberName: memberDisplayName,
+        });
+        setRecentCheckins((prev) => [
+          {
+            id: `chk-${Date.now()}`,
+            name: memObj ? `${memObj.firstName} ${memObj.lastName}` : (membersList[0]?.name || 'Verified Member'),
+            memberId: targetIdentifier,
+            time: 'Just now',
+            plan: 'Annual Pass',
+            status: 'ACTIVE',
+          },
+          ...prev.slice(0, 4),
+        ]);
+        success('Turnstile Unlocked', 'Access granted. Live floor capacity updated.');
+      } else {
+        const isExp = res.error?.message?.toLowerCase().includes('expired') || memberType === 'EXPIRED';
+        setLastPunchResult({
+          status: isExp ? 'DENIED_EXPIRED' : 'DENIED_FROZEN',
+          message: res.error?.message || (isExp ? 'Gate Access Denied: Membership plan expired. Renewal required.' : 'Gate Access Denied: Membership is currently frozen.'),
+          memberName: targetIdentifier,
+        });
+        toastError('Turnstile Blocked', res.error?.message || 'Access Denied.');
+      }
+    } catch (err: any) {
+      toastError('Turnstile Communication Error', err?.message || 'Failed to trigger gate hardware punch.');
     }
   };
 
   // Tax invoice calculations
-  const basePrice = invoiceItem.includes('Annual') ? 20000 : invoiceItem.includes('Half') ? 11500 : 6500;
+  const activePlanObj = plansList.find((p) => p.id === invoicePlanId);
+  const basePrice = activePlanObj ? Math.round(activePlanObj.priceInPaise / 100) : 20000;
   const taxableSubtotal = Math.max(0, basePrice - discountAmount);
   const cgst = isInterState ? 0 : Math.round(taxableSubtotal * 0.09);
   const sgst = isInterState ? 0 : Math.round(taxableSubtotal * 0.09);
   const igst = isInterState ? Math.round(taxableSubtotal * 0.18) : 0;
   const taxTotal = cgst + sgst + igst;
   const grandTotal = taxableSubtotal + taxTotal;
+
+  const handleCreateInvoice = async () => {
+    try {
+      const selectedMember = membersList.find((m) => m.id === invoiceMemberId) || membersList[0];
+      const planItem = plansList.find((p) => p.id === invoicePlanId);
+      const res = await api.post('/billing/invoices', {
+        memberId: selectedMember?.id,
+        items: [
+          {
+            description: planItem?.name || 'Annual VIP Club (12M)',
+            amountInPaise: basePrice * 100,
+            sacCode: '999723',
+          },
+        ],
+        isInterState,
+        discountInPaise: discountAmount * 100,
+        notes: 'Invoice generated from quick-action console',
+      });
+
+      if (res.success) {
+        setIsInvoiceModalOpen(false);
+        success('Tax Invoice Created', `${res.data?.invoiceNumber || 'INV-2026-27-0043'} generated for ₹${grandTotal.toLocaleString('en-IN')}`);
+      } else {
+        toastError('Invoice Error', res.error?.message || 'Unable to record tax invoice');
+      }
+    } catch (err: any) {
+      toastError('Invoice Error', err?.message || 'Failed to process invoice request');
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-full min-w-0">
@@ -315,22 +430,28 @@ export const DashboardOverviewPage: React.FC = () => {
           </CardHeader>
           <CardContent className="pt-2">
             <div className="space-y-3">
-              {recentCheckins.map((chk) => (
-                <div key={chk.id} className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-card">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold text-xs shrink-0">
-                      {chk.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-foreground">{chk.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{chk.memberId} • {chk.time}</div>
-                    </div>
-                  </div>
-                  <Badge variant="outline" size="sm">
-                    {chk.plan.split(' ')[0]}
-                  </Badge>
+              {recentCheckins.length === 0 ? (
+                <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg">
+                  No check-ins recorded yet today.
                 </div>
-              ))}
+              ) : (
+                recentCheckins.map((chk) => (
+                  <div key={chk.id} className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-card">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center font-bold text-xs shrink-0">
+                        {chk.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">{chk.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{chk.memberId} • {chk.time}</div>
+                      </div>
+                    </div>
+                    <Badge variant="outline" size="sm">
+                      {chk.plan.split(' ')[0]}
+                    </Badge>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -348,35 +469,41 @@ export const DashboardOverviewPage: React.FC = () => {
           </Badge>
         </CardHeader>
         <CardContent>
-          <div className="divide-y divide-border border border-border rounded-lg text-xs">
-            {upcomingRenewals.map((r) => (
-              <div key={r.id} className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card">
-                <div>
-                  <div className="font-semibold text-foreground">{r.name} ({r.memberId})</div>
-                  <div className="text-muted-foreground">{r.plan} • {r.expiresOn}</div>
+          {upcomingRenewals.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg">
+              No memberships due for renewal in the next 14 days.
+            </div>
+          ) : (
+            <div className="divide-y divide-border border border-border rounded-lg text-xs">
+              {upcomingRenewals.map((r) => (
+                <div key={r.id} className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card">
+                  <div>
+                    <div className="font-semibold text-foreground">{r.name} ({r.memberId})</div>
+                    <div className="text-muted-foreground">{r.plan} • {r.expiresOn}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => success('WhatsApp Reminder Dispatched', `Retention message sent to ${r.phone}`)}
+                      leftIcon={<Send className="w-3.5 h-3.5 text-emerald-500" />}
+                    >
+                      Send WhatsApp Reminder
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="brand"
+                      className="h-7 text-xs"
+                      onClick={() => success('Renewal Processed', `1-Year renewal invoice generated for ${r.name}`)}
+                    >
+                      Renew Plan
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => success('WhatsApp Reminder Dispatched', `Retention message sent to ${r.phone}`)}
-                    leftIcon={<Send className="w-3.5 h-3.5 text-emerald-500" />}
-                  >
-                    Send WhatsApp Reminder
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="brand"
-                    className="h-7 text-xs"
-                    onClick={() => success('Renewal Processed', `1-Year renewal invoice generated for ${r.name}`)}
-                  >
-                    Renew Plan
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -484,23 +611,30 @@ export const DashboardOverviewPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Select Member"
-              value={invoiceMember}
-              onChange={(e) => setInvoiceMember(e.target.value)}
-              options={[
-                { label: 'Aarav Sharma (IP-2026-0001)', value: 'Aarav Sharma (IP-2026-0001)' },
-                { label: 'Priya Iyer (IP-2026-0002)', value: 'Priya Iyer (IP-2026-0002)' },
-                { label: 'Ananya Deshmukh (IP-2026-0004)', value: 'Ananya Deshmukh (IP-2026-0004)' },
-              ]}
+              value={invoiceMemberId}
+              onChange={(e) => setInvoiceMemberId(e.target.value)}
+              options={
+                membersList.length > 0
+                  ? membersList.map((m) => ({ label: `${m.name} (${m.code})`, value: m.id }))
+                  : [{ label: 'No members registered yet', value: '' }]
+              }
             />
             <Select
               label="Item / Service"
-              value={invoiceItem}
-              onChange={(e) => setInvoiceItem(e.target.value)}
-              options={[
-                { label: 'Annual VIP Club (12M) - ₹20,000 Base', value: 'Annual VIP Club (12M)' },
-                { label: 'Half-Yearly Elite (6M) - ₹11,500 Base', value: 'Half-Yearly Elite (6M)' },
-                { label: 'Quarterly Pro (3M) - ₹6,500 Base', value: 'Quarterly Pro (3M)' },
-              ]}
+              value={invoicePlanId}
+              onChange={(e) => setInvoicePlanId(e.target.value)}
+              options={
+                plansList.length > 0
+                  ? plansList.map((p) => ({
+                      label: `${p.name} - ₹${(p.priceInPaise / 100).toLocaleString('en-IN')}`,
+                      value: p.id,
+                    }))
+                  : [
+                      { label: 'Annual VIP Club (12M) - ₹20,000 Base', value: '' },
+                      { label: 'Half-Yearly Elite (6M) - ₹11,500 Base', value: '' },
+                      { label: 'Quarterly Pro (3M) - ₹6,500 Base', value: '' },
+                    ]
+              }
             />
           </div>
 
@@ -587,10 +721,7 @@ export const DashboardOverviewPage: React.FC = () => {
             </Button>
             <Button
               variant="brand"
-              onClick={() => {
-                setIsInvoiceModalOpen(false);
-                success('Tax Invoice Created', `INV-2026-27-0043 generated for ₹${grandTotal.toLocaleString('en-IN')}`);
-              }}
+              onClick={handleCreateInvoice}
               leftIcon={<Printer className="w-3.5 h-3.5" />}
             >
               Generate & Record Invoice

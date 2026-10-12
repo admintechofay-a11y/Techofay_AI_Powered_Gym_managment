@@ -268,10 +268,10 @@ export class MarketingService {
     const rule = await AutomationRule.findOne({ _id: ruleId, tenantId });
     if (!rule) throw new Error('Rule not found');
 
-    const sampleMembers = await Member.find({ tenantId, isDeleted: false }).limit(20);
+    const targetMembers = await Member.find({ tenantId, isDeleted: false });
     let matched = 0;
 
-    for (const member of sampleMembers) {
+    for (const member of targetMembers) {
       let conditionsMet = true;
 
       for (const cond of rule.conditions) {

@@ -345,8 +345,8 @@ export class TrainerService {
       rating: data.rating,
       reviewText: data.reviewText,
       isPublic: data.isPublic ?? true,
-      isApproved: true, // auto-approve for demonstration & responsiveness
-      status: 'APPROVED',
+      isApproved: false,
+      status: 'PENDING',
     });
 
     // Update trainer aggregate rating

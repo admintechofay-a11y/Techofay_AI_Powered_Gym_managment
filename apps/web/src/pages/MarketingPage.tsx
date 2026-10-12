@@ -89,113 +89,9 @@ interface CouponItem {
   type: 'BIRTHDAY' | 'ANNIVERSARY' | 'FESTIVAL' | 'PROMO';
 }
 
-const INITIAL_CAMPAIGNS: CampaignItem[] = [
-  {
-    id: 'camp-1',
-    name: 'Diwali Fitness Fest 2026',
-    type: 'FESTIVAL',
-    channel: 'WHATSAPP',
-    status: 'SENT',
-    abTestingEnabled: true,
-    variants: [
-      {
-        variantId: 'A',
-        subject: 'Diwali Flat 30% Off',
-        body: 'Celebrate Diwali with flat 30% off on all annual pass renewals!',
-        percentage: 50,
-      },
-      {
-        variantId: 'B',
-        subject: 'Festive 3 Free Months',
-        body: 'Renew for 12 months and receive 3 bonus months completely free!',
-        percentage: 50,
-      },
-    ],
-    sentCount: 180,
-    deliveredCount: 176,
-    openedCount: 132,
-    clickedCount: 68,
-    convertedCount: 26,
-    revenueInPaise: 39000000, // ₹3,90,000
-    createdAt: '2026-10-02',
-  },
-  {
-    id: 'camp-2',
-    name: 'Churn Win-Back (Absent 14+ Days)',
-    type: 'WIN_BACK',
-    channel: 'WHATSAPP',
-    status: 'SENT',
-    abTestingEnabled: false,
-    variants: [
-      {
-        variantId: 'A',
-        body: 'We miss you, {{memberName}}! Drop in this week for a complimentary personal training session on us.',
-        percentage: 100,
-      },
-    ],
-    sentCount: 45,
-    deliveredCount: 44,
-    openedCount: 35,
-    clickedCount: 19,
-    convertedCount: 8,
-    revenueInPaise: 12000000, // ₹1,20,000
-    createdAt: '2026-10-04',
-  },
-  {
-    id: 'camp-3',
-    name: 'New Member Welcome & Nutrition Kickoff',
-    type: 'WELCOME',
-    channel: 'EMAIL',
-    status: 'SENT',
-    abTestingEnabled: false,
-    variants: [
-      {
-        variantId: 'A',
-        subject: 'Welcome to IronPulse - Your Transformation Starts Here',
-        body: 'Access your complimentary diet consultation and claim your gym kit at reception.',
-        percentage: 100,
-      },
-    ],
-    sentCount: 60,
-    deliveredCount: 59,
-    openedCount: 48,
-    clickedCount: 28,
-    convertedCount: 14,
-    revenueInPaise: 21000000,
-    createdAt: '2026-10-06',
-  },
-];
+const INITIAL_CAMPAIGNS: CampaignItem[] = [];
 
-const INITIAL_SEGMENTS: SegmentItem[] = [
-  {
-    id: 'seg-1',
-    name: 'High-Value Annual Members',
-    description: 'Active members on annual tier with frequent check-ins',
-    estimatedCount: 84,
-    criteria: { membershipStatus: ['ACTIVE'], fitnessGoals: ['Hypertrophy', 'Strength'] },
-  },
-  {
-    id: 'seg-2',
-    name: 'At-Risk Churn (Inactive > 14 Days)',
-    description: 'Members with zero turnstile check-ins over the past 2 weeks',
-    estimatedCount: 28,
-    criteria: { membershipStatus: ['ACTIVE'], inactivityDays: 14 },
-  },
-  {
-    id: 'seg-3',
-    name: 'Young Athletes (18-25 Years)',
-    description: 'Gen-Z members engaged in high-intensity CrossFit programs',
-    estimatedCount: 62,
-    criteria: { minAge: 18, maxAge: 25, fitnessGoals: ['CrossFit'] },
-  },
-  {
-    id: 'seg-4',
-    name: 'Expired Members (Past 30 Days)',
-    description: 'Past members eligible for reactivation win-back discounts',
-    estimatedCount: 35,
-    criteria: { membershipStatus: ['EXPIRED'] },
-  },
-];
+const INITIAL_SEGMENTS: SegmentItem[] = [];
 
 const INITIAL_RULES: AutomationRuleItem[] = [
   {
@@ -206,8 +102,7 @@ const INITIAL_RULES: AutomationRuleItem[] = [
     actionDescription: 'Send WhatsApp template with renewal portal link',
     actionType: 'SEND_WHATSAPP',
     isActive: true,
-    executionCount: 54,
-    lastRunAt: '2026-10-07 08:00',
+    executionCount: 0,
   },
   {
     id: 'rule-2',
@@ -217,8 +112,7 @@ const INITIAL_RULES: AutomationRuleItem[] = [
     actionDescription: 'Auto-create coupon BDAY-XXX (20% off) & send WhatsApp',
     actionType: 'CREATE_COUPON',
     isActive: true,
-    executionCount: 12,
-    lastRunAt: '2026-10-07 08:00',
+    executionCount: 0,
   },
   {
     id: 'rule-3',
@@ -228,8 +122,7 @@ const INITIAL_RULES: AutomationRuleItem[] = [
     actionDescription: 'Auto-create coupon ANNIV-XXX (15% off) & send congratulations',
     actionType: 'CREATE_COUPON',
     isActive: true,
-    executionCount: 8,
-    lastRunAt: '2026-10-07 08:00',
+    executionCount: 0,
   },
   {
     id: 'rule-4',
@@ -239,46 +132,11 @@ const INITIAL_RULES: AutomationRuleItem[] = [
     actionDescription: 'Send WhatsApp encouragement to book a class',
     actionType: 'SEND_WHATSAPP',
     isActive: true,
-    executionCount: 38,
-    lastRunAt: '2026-10-07 11:00',
+    executionCount: 0,
   },
 ];
 
-const INITIAL_COUPONS: CouponItem[] = [
-  {
-    id: 'coup-1',
-    code: 'BDAY-MEM001-2026',
-    discountType: 'PERCENTAGE',
-    discountValue: 20,
-    validUntil: '2026-10-21',
-    usageCount: 0,
-    usageLimit: 1,
-    isActive: true,
-    type: 'BIRTHDAY',
-  },
-  {
-    id: 'coup-2',
-    code: 'ANNIV-MEM004-2026',
-    discountType: 'PERCENTAGE',
-    discountValue: 15,
-    validUntil: '2026-11-06',
-    usageCount: 1,
-    usageLimit: 1,
-    isActive: false,
-    type: 'ANNIVERSARY',
-  },
-  {
-    id: 'coup-3',
-    code: 'DIWALI30',
-    discountType: 'PERCENTAGE',
-    discountValue: 30,
-    validUntil: '2026-11-15',
-    usageCount: 26,
-    usageLimit: 100,
-    isActive: true,
-    type: 'FESTIVAL',
-  },
-];
+const INITIAL_COUPONS: CouponItem[] = [];
 
 export const MarketingPage: React.FC = () => {
   const { addToast } = useToast();
@@ -473,28 +331,39 @@ export const MarketingPage: React.FC = () => {
             <div className="p-4 rounded-xl border border-border bg-card">
               <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Campaigns</span>
               <p className="text-2xl font-bold mt-1 text-foreground">{campaigns.length}</p>
-              <span className="text-xs text-emerald-600 font-medium">Multi-channel delivery</span>
+              <span className="text-xs text-muted-foreground font-medium">Multi-channel delivery</span>
             </div>
             <div className="p-4 rounded-xl border border-border bg-card">
               <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Avg Open Rate</span>
-              <p className="text-2xl font-bold mt-1 text-brand-600">76.4%</p>
+              <p className="text-2xl font-bold mt-1 text-brand-600">
+                {campaigns.length > 0 ? `${(campaigns.reduce((acc, c) => acc + (c.openedCount / (c.deliveredCount || 1)), 0) / campaigns.length * 100).toFixed(1)}%` : '0.0%'}
+              </p>
               <span className="text-xs text-muted-foreground">WhatsApp & Email tracked</span>
             </div>
             <div className="p-4 rounded-xl border border-border bg-card">
               <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Conversions</span>
-              <p className="text-2xl font-bold mt-1 text-emerald-600">48 Members</p>
+              <p className="text-2xl font-bold mt-1 text-emerald-600">
+                {campaigns.reduce((acc, c) => acc + c.convertedCount, 0)} Members
+              </p>
               <span className="text-xs text-muted-foreground">Direct campaign attribution</span>
             </div>
             <div className="p-4 rounded-xl border border-border bg-card">
               <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Revenue Attributed</span>
-              <p className="text-2xl font-bold mt-1 text-foreground">₹7,20,000</p>
-              <span className="text-xs text-emerald-600 font-medium">ROI 18.4x</span>
+              <p className="text-2xl font-bold mt-1 text-foreground">
+                ₹{(campaigns.reduce((acc, c) => acc + c.revenueInPaise, 0) / 100).toLocaleString('en-IN')}
+              </p>
+              <span className="text-xs text-muted-foreground font-medium">Attributed revenue</span>
             </div>
           </div>
 
           {/* Campaign Cards List */}
           <div className="space-y-4">
-            {campaigns.map((camp) => (
+            {campaigns.length === 0 ? (
+              <div className="text-center py-16 bg-card rounded-2xl border border-dashed border-border text-muted-foreground">
+                No campaigns launched yet. Click "+ Create Campaign" to launch an omnichannel campaign.
+              </div>
+            ) : (
+              campaigns.map((camp) => (
               <div key={camp.id} className="p-5 rounded-2xl border border-border bg-card space-y-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
                   <div className="flex items-center gap-2.5">
@@ -561,7 +430,7 @@ export const MarketingPage: React.FC = () => {
                   </div>
                 )}
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}
@@ -676,32 +545,38 @@ export const MarketingPage: React.FC = () => {
           {/* Saved Audience Segments */}
           <div className="lg:col-span-2 space-y-4">
             <h3 className="font-semibold text-base text-foreground">Saved Segments Catalog</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {segments.map((seg) => (
-                <div key={seg.id} className="p-4 rounded-2xl border border-border bg-card space-y-3 shadow-sm hover:border-brand-500/40 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-sm text-foreground">{seg.name}</h4>
-                    <Badge variant="secondary">{seg.estimatedCount} Members</Badge>
+            {segments.length === 0 ? (
+              <div className="text-center py-16 bg-card rounded-2xl border border-dashed border-border text-muted-foreground">
+                No saved audience segments yet. Use the Live Segment Filter on the left to calculate and save segments.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {segments.map((seg) => (
+                  <div key={seg.id} className="p-4 rounded-2xl border border-border bg-card space-y-3 shadow-sm hover:border-brand-500/40 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-sm text-foreground">{seg.name}</h4>
+                      <Badge variant="secondary">{seg.estimatedCount} Members</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{seg.description}</p>
+                    <div className="pt-2 border-t border-border flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          addToast({
+                            title: 'Segment Selected',
+                            message: `Targeting ${seg.name} (${seg.estimatedCount} members)`,
+                            type: 'info',
+                          });
+                        }}
+                      >
+                        Use in Campaign
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">{seg.description}</p>
-                  <div className="pt-2 border-t border-border flex justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        addToast({
-                          title: 'Segment Selected',
-                          message: `Targeting ${seg.name} (${seg.estimatedCount} members)`,
-                          type: 'info',
-                        });
-                      }}
-                    >
-                      Use in Campaign
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -829,26 +704,34 @@ export const MarketingPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {coupons.map((c) => (
-                  <tr key={c.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-mono font-bold text-foreground">{c.code}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant="outline">{c.type}</Badge>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-emerald-600">
-                      {c.discountValue}% OFF
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{c.validUntil}</td>
-                    <td className="px-4 py-3 text-xs">
-                      {c.usageCount} / {c.usageLimit}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={c.isActive ? 'default' : 'outline'}>
-                        {c.isActive ? 'Active' : 'Redeemed / Expired'}
-                      </Badge>
+                {coupons.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-12 text-muted-foreground">
+                      No milestone coupons issued yet.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  coupons.map((c) => (
+                    <tr key={c.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-mono font-bold text-foreground">{c.code}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline">{c.type}</Badge>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-emerald-600">
+                        {c.discountValue}% OFF
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{c.validUntil}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {c.usageCount} / {c.usageLimit}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={c.isActive ? 'default' : 'outline'}>
+                          {c.isActive ? 'Active' : 'Redeemed / Expired'}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

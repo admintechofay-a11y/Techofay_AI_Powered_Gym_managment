@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/run-tests.js",
-    "seed": "tsx src/seeds/seed.ts"
+    "seed": "tsx src/seeds/seed.ts",
+    "seed:reset": "tsx src/seeds/seed.ts"
   },
   "dependencies": {
     "@gymos/shared": "workspace:*",

@@ -77,184 +77,13 @@ export interface MemberReview {
   date: string;
 }
 
-const INITIAL_TRAINERS: TrainerProfile[] = [
-  {
-    id: 'tr-1',
-    name: 'Kabir Bhasin',
-    email: 'kabir.bhasin@ironpulse-fitness.org',
-    phone: '+91 98200 11776',
-    photoUrl: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?auto=format&fit=crop&w=600&q=80',
-    bio: 'Former national level weightlifter and certified CrossFit Level 2 coach with 8+ years coaching athletes.',
-    specializations: ['Olympic Weightlifting', 'CrossFit & WODs', 'Strength & Hypertrophy', 'Athletic Conditioning'],
-    qualifications: ['B.Sc. Sports Science', 'NSCA Certified Strength & Conditioning Specialist (CSCS)'],
-    certifications: ['CrossFit Level 2 Trainer', 'USAW Sports Performance Coach', 'First Aid & CPR'],
-    rating: 4.9,
-    totalReviews: 48,
-    commissionRatePercent: 25,
-    assignedMembersCount: 14,
-    activePtSessionsCount: 42,
-    availability: [
-      { day: 'Mon - Fri', hours: '06:00 AM - 12:00 PM & 05:00 PM - 09:00 PM' },
-      { day: 'Saturday', hours: '07:00 AM - 01:00 PM' },
-    ],
-  },
-  {
-    id: 'tr-2',
-    name: 'Ananya Deshmukh',
-    email: 'ananya.deshmukh@ironpulse-fitness.org',
-    phone: '+91 98200 11778',
-    photoUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80',
-    bio: 'Dedicated Ashtanga Yoga master and functional mobility specialist helping members improve range of motion.',
-    specializations: ['Power Yoga', 'Spine & Joint Mobility', 'Core Rehabilitation', 'Breathwork & Mindfulness'],
-    qualifications: ['M.A. Yogic Science', 'ACE Certified Personal Trainer'],
-    certifications: ['Yoga Alliance RYT-500', 'FMS Level 1 Functional Movement'],
-    rating: 4.8,
-    totalReviews: 32,
-    commissionRatePercent: 20,
-    assignedMembersCount: 11,
-    activePtSessionsCount: 28,
-    availability: [
-      { day: 'Mon - Fri', hours: '07:00 AM - 01:00 PM' },
-      { day: 'Saturday', hours: '08:00 AM - 12:00 PM' },
-    ],
-  },
-  {
-    id: 'tr-3',
-    name: 'Sameer Sen',
-    email: 'sameer.sen@ironpulse-fitness.org',
-    phone: '+91 98200 11779',
-    photoUrl: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?auto=format&fit=crop&w=600&q=80',
-    bio: 'High-energy cardiovascular endurance coach and spinning certified instructor with focus on HIIT.',
-    specializations: ['Spinning & Cycling', 'HIIT Circuit Training', 'Kettlebell Flow', 'Fat Loss Conditioning'],
-    qualifications: ['B.P.Ed Physical Education', 'ISSA Certified Fitness Trainer'],
-    certifications: ['Schwinn Certified Cycling Coach', 'StrongFirst SFG I'],
-    rating: 4.7,
-    totalReviews: 29,
-    commissionRatePercent: 20,
-    assignedMembersCount: 9,
-    activePtSessionsCount: 19,
-    availability: [
-      { day: 'Mon - Fri', hours: '06:00 AM - 11:00 AM & 04:00 PM - 08:30 PM' },
-      { day: 'Sunday', hours: '08:00 AM - 01:00 PM' },
-    ],
-  },
-];
+const INITIAL_TRAINERS: TrainerProfile[] = [];
 
-const INITIAL_PT_PACKAGES: PtPackageTracker[] = [
-  {
-    id: 'pt-1',
-    memberName: 'Aarav Nambiar',
-    memberCode: 'IP-FIT-001',
-    trainerName: 'Kabir Bhasin',
-    trainerId: 'tr-1',
-    packageName: '12-Session Strength Masterclass',
-    totalSessions: 12,
-    usedSessions: 5,
-    remainingSessions: 7,
-    priceInInr: 18000,
-    expiryDate: '2026-11-30',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'pt-2',
-    memberName: 'Kavita Iyer',
-    memberCode: 'IP-FIT-002',
-    trainerName: 'Ananya Deshmukh',
-    trainerId: 'tr-2',
-    packageName: '8-Session Mobility & Core Plan',
-    totalSessions: 8,
-    usedSessions: 6,
-    remainingSessions: 2,
-    priceInInr: 12000,
-    expiryDate: '2026-10-31',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'pt-3',
-    memberName: 'Devendra Patel',
-    memberCode: 'IP-FIT-006',
-    trainerName: 'Kabir Bhasin',
-    trainerId: 'tr-1',
-    packageName: '24-Session Transformation Pro',
-    totalSessions: 24,
-    usedSessions: 18,
-    remainingSessions: 6,
-    priceInInr: 32000,
-    expiryDate: '2026-12-15',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'pt-4',
-    memberName: 'Vikram Singhania',
-    memberCode: 'IP-FIT-007',
-    trainerName: 'Sameer Sen',
-    trainerId: 'tr-3',
-    packageName: '10-Session Fat Burn Blitz',
-    totalSessions: 10,
-    usedSessions: 10,
-    remainingSessions: 0,
-    priceInInr: 15000,
-    expiryDate: '2026-10-10',
-    status: 'EXHAUSTED',
-  },
-];
+const INITIAL_PT_PACKAGES: PtPackageTracker[] = [];
 
-const INITIAL_PAYOUTS: CommissionPayout[] = [
-  {
-    trainerId: 'tr-1',
-    trainerName: 'Kabir Bhasin',
-    sessionsConducted: 46,
-    grossRevenueInInr: 69000,
-    commissionRatePercent: 25,
-    payoutAmountInInr: 17250,
-    status: 'PENDING',
-  },
-  {
-    trainerId: 'tr-2',
-    trainerName: 'Ananya Deshmukh',
-    sessionsConducted: 34,
-    grossRevenueInInr: 51000,
-    commissionRatePercent: 20,
-    payoutAmountInInr: 10200,
-    status: 'PENDING',
-  },
-  {
-    trainerId: 'tr-3',
-    trainerName: 'Sameer Sen',
-    sessionsConducted: 28,
-    grossRevenueInInr: 42000,
-    commissionRatePercent: 20,
-    payoutAmountInInr: 8400,
-    status: 'PAID',
-  },
-];
+const INITIAL_PAYOUTS: CommissionPayout[] = [];
 
-const INITIAL_REVIEWS: MemberReview[] = [
-  {
-    id: 'rev-1',
-    memberName: 'Aarav Nambiar',
-    trainerName: 'Kabir Bhasin',
-    rating: 5,
-    comment: 'Kabir is phenomenal! Added 15kg to my back squat in just 4 weeks while maintaining immaculate form.',
-    date: '2026-10-04',
-  },
-  {
-    id: 'rev-2',
-    memberName: 'Kavita Iyer',
-    trainerName: 'Ananya Deshmukh',
-    rating: 5,
-    comment: 'Ananya helped eliminate my chronic lower back stiffness. Her mobility drills are truly life-changing.',
-    date: '2026-10-02',
-  },
-  {
-    id: 'rev-3',
-    memberName: 'Vikram Singhania',
-    trainerName: 'Sameer Sen',
-    rating: 4,
-    comment: 'Brutal cardio workouts! Dropped 3kg of fat in 3 weeks. Extremely motivating coach.',
-    date: '2026-09-28',
-  },
-];
+const INITIAL_REVIEWS: MemberReview[] = [];
 
 export const TrainersPage: React.FC = () => {
   const { addToast } = useToast();
@@ -478,11 +307,16 @@ export const TrainersPage: React.FC = () => {
       {/* TAB 1: TRAINER ROSTER & PROFILES */}
       {activeTab === 'ROSTER' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trainers.map((tr) => (
-            <div
-              key={tr.id}
-              className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-            >
+          {trainers.length === 0 ? (
+            <div className="col-span-full py-16 text-center text-xs text-muted-foreground border-2 border-dashed border-border/60 rounded-2xl">
+              No trainers onboarded yet. Click "Add Trainer" to register coaching staff.
+            </div>
+          ) : (
+            trainers.map((tr) => (
+              <div
+                key={tr.id}
+                className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+              >
               <div>
                 {/* Photo & Header */}
                 <div className="relative h-48 overflow-hidden bg-muted">
@@ -564,7 +398,7 @@ export const TrainersPage: React.FC = () => {
                 <span className="text-primary font-semibold">Available</span>
               </div>
             </div>
-          ))}
+          )))}
         </div>
       )}
 
@@ -596,49 +430,57 @@ export const TrainersPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {ptPackages.map((pkg) => (
-                  <tr key={pkg.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3.5">
-                      <div className="font-semibold text-foreground">{pkg.memberName}</div>
-                      <div className="text-xs text-muted-foreground">{pkg.memberCode}</div>
-                    </td>
-                    <td className="px-4 py-3.5 font-medium text-muted-foreground">🏋️ {pkg.trainerName}</td>
-                    <td className="px-4 py-3.5">
-                      <div className="font-medium">{pkg.packageName}</div>
-                      <div className="text-xs text-muted-foreground">₹{pkg.priceInInr.toLocaleString()}</div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <span>{pkg.usedSessions} / {pkg.totalSessions}</span>
-                        <div className="w-16 bg-muted h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className="bg-primary h-full rounded-full"
-                            style={{ width: `${Math.round((pkg.usedSessions / pkg.totalSessions) * 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="font-bold text-base text-foreground">{pkg.remainingSessions}</span>
-                    </td>
-                    <td className="px-4 py-3.5 text-xs text-muted-foreground">{pkg.expiryDate}</td>
-                    <td className="px-4 py-3.5">
-                      <Badge variant={pkg.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                        {pkg.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <Button
-                        size="sm"
-                        disabled={pkg.remainingSessions <= 0}
-                        onClick={() => handleDecrementSession(pkg)}
-                        className="text-xs"
-                      >
-                        Decrement Session (-1)
-                      </Button>
+                {ptPackages.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-12 text-muted-foreground">
+                      No personal training packages active yet.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  ptPackages.map((pkg) => (
+                    <tr key={pkg.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div className="font-semibold text-foreground">{pkg.memberName}</div>
+                        <div className="text-xs text-muted-foreground">{pkg.memberCode}</div>
+                      </td>
+                      <td className="px-4 py-3.5 font-medium text-muted-foreground">🏋️ {pkg.trainerName}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="font-medium">{pkg.packageName}</div>
+                        <div className="text-xs text-muted-foreground">₹{pkg.priceInInr.toLocaleString()}</div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <span>{pkg.usedSessions} / {pkg.totalSessions}</span>
+                          <div className="w-16 bg-muted h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-primary h-full rounded-full"
+                              style={{ width: `${Math.round((pkg.usedSessions / pkg.totalSessions) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-base text-foreground">{pkg.remainingSessions}</span>
+                      </td>
+                      <td className="px-4 py-3.5 text-xs text-muted-foreground">{pkg.expiryDate}</td>
+                      <td className="px-4 py-3.5">
+                        <Badge variant={pkg.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                          {pkg.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <Button
+                          size="sm"
+                          disabled={pkg.remainingSessions <= 0}
+                          onClick={() => handleDecrementSession(pkg)}
+                          className="text-xs"
+                        >
+                          Decrement Session (-1)
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -675,51 +517,59 @@ export const TrainersPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {payouts.map((pay, i) => (
-                  <tr key={i} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3.5 font-bold text-foreground">{pay.trainerName}</td>
-                    <td className="px-4 py-3.5 text-muted-foreground">{pay.sessionsConducted} sessions</td>
-                    <td className="px-4 py-3.5 font-medium">₹{pay.grossRevenueInInr.toLocaleString()}</td>
-                    <td className="px-4 py-3.5 font-bold text-primary">{pay.commissionRatePercent}%</td>
-                    <td className="px-4 py-3.5 font-bold text-emerald-600 dark:text-emerald-400 text-base">
-                      ₹{pay.payoutAmountInInr.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`text-xs px-2.5 py-1 rounded-full font-bold ${
-                          pay.status === 'PAID'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                        }`}
-                      >
-                        {pay.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      {pay.status === 'PENDING' ? (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setPayouts((prev) =>
-                              prev.map((p, idx) => (idx === i ? { ...p, status: 'PAID' } : p)),
-                            );
-                            addToast({
-                              title: 'Payout Disbursed',
-                              message: `Transferred ₹${pay.payoutAmountInInr.toLocaleString()} to ${pay.trainerName}`,
-                              type: 'success',
-                            });
-                          }}
-                        >
-                          Disburse Payout
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground flex items-center justify-end gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Disbursed
-                        </span>
-                      )}
+                {payouts.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                      No commission payouts recorded yet.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  payouts.map((pay, i) => (
+                    <tr key={i} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3.5 font-bold text-foreground">{pay.trainerName}</td>
+                      <td className="px-4 py-3.5 text-muted-foreground">{pay.sessionsConducted} sessions</td>
+                      <td className="px-4 py-3.5 font-medium">₹{pay.grossRevenueInInr.toLocaleString()}</td>
+                      <td className="px-4 py-3.5 font-bold text-primary">{pay.commissionRatePercent}%</td>
+                      <td className="px-4 py-3.5 font-bold text-emerald-600 dark:text-emerald-400 text-base">
+                        ₹{pay.payoutAmountInInr.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span
+                          className={`text-xs px-2.5 py-1 rounded-full font-bold ${
+                            pay.status === 'PAID'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                          }`}
+                        >
+                          {pay.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        {pay.status === 'PENDING' ? (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setPayouts((prev) =>
+                                prev.map((p, idx) => (idx === i ? { ...p, status: 'PAID' } : p)),
+                              );
+                              addToast({
+                                title: 'Payout Disbursed',
+                                message: `Transferred ₹${pay.payoutAmountInInr.toLocaleString()} to ${pay.trainerName}`,
+                                type: 'success',
+                              });
+                            }}
+                          >
+                            Disburse Payout
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground flex items-center justify-end gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Disbursed
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -729,32 +579,38 @@ export const TrainersPage: React.FC = () => {
       {/* TAB 4: MEMBER REVIEWS & RATINGS */}
       {activeTab === 'REVIEWS' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {reviews.map((rev) => (
-            <div key={rev.id} className="bg-card rounded-2xl border border-border p-5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < rev.rating
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'fill-muted text-muted-foreground'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs text-muted-foreground">{rev.date}</span>
-              </div>
-
-              <p className="text-sm text-foreground italic">"{rev.comment}"</p>
-
-              <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">{rev.memberName}</span>
-                <span>Coach: <strong>{rev.trainerName}</strong></span>
-              </div>
+          {reviews.length === 0 ? (
+            <div className="col-span-full text-center py-16 bg-card rounded-2xl border border-dashed border-border text-muted-foreground">
+              No member reviews recorded yet.
             </div>
-          ))}
+          ) : (
+            reviews.map((rev) => (
+              <div key={rev.id} className="bg-card rounded-2xl border border-border p-5 space-y-3 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${
+                          i < rev.rating
+                            ? 'fill-amber-400 text-amber-400'
+                            : 'fill-muted text-muted-foreground'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">{rev.date}</span>
+                </div>
+
+                <p className="text-sm text-foreground italic">"{rev.comment}"</p>
+
+                <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">{rev.memberName}</span>
+                  <span>Coach: <strong>{rev.trainerName}</strong></span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 

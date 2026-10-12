@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DataTable, Column } from '../components/ui/DataTable.js';
 import { Badge } from '../components/ui/Badge.js';
 import { Button } from '../components/ui/Button.js';
@@ -6,6 +6,7 @@ import { Modal } from '../components/ui/Modal.js';
 import { Input } from '../components/ui/Input.js';
 import { Select } from '../components/ui/Select.js';
 import { useToast } from '../components/ui/Toast.js';
+import { api } from '../services/api.js';
 import {
   UserPlus,
   Upload,
@@ -45,121 +46,49 @@ export interface MemberRecord {
   dueAmountInInr: number;
 }
 
-const INITIAL_MEMBERS: MemberRecord[] = [
-  {
-    id: 'm-1',
-    memberId: 'IP-2026-0001',
-    name: 'Aarav Sharma',
-    phone: '+91 98201 12345',
-    email: 'aarav.sharma@gmail.com',
-    gender: 'MALE',
-    plan: 'Annual VIP Club (12M)',
-    planPriceInInr: 20000,
-    startDate: '2026-01-15',
-    endDate: '2027-01-14',
-    status: 'ACTIVE',
-    emergencyContact: { name: 'Sunita Sharma', phone: '+91 98201 99999', relation: 'Spouse' },
-    attendanceCount: 68,
-    lastCheckIn: 'Today, 07:15 AM (Turnstile 01)',
-    invoicesCount: 1,
-    dueAmountInInr: 0,
-  },
-  {
-    id: 'm-2',
-    memberId: 'IP-2026-0002',
-    name: 'Priya Iyer',
-    phone: '+91 98202 23456',
-    email: 'priya.iyer@outlook.com',
-    gender: 'FEMALE',
-    plan: 'Quarterly Pro (3M)',
-    planPriceInInr: 6500,
-    startDate: '2026-08-01',
-    endDate: '2026-10-31',
-    status: 'ACTIVE',
-    emergencyContact: { name: 'Raman Iyer', phone: '+91 98202 88888', relation: 'Father' },
-    attendanceCount: 42,
-    lastCheckIn: 'Yesterday, 06:40 PM (QR Scan)',
-    invoicesCount: 2,
-    dueAmountInInr: 0,
-  },
-  {
-    id: 'm-3',
-    memberId: 'IP-2026-0003',
-    name: 'Rohan Mehra',
-    phone: '+91 98203 34567',
-    email: 'rohan.mehra@yahoo.com',
-    gender: 'MALE',
-    plan: 'Monthly Gold (1M)',
-    planPriceInInr: 2500,
-    startDate: '2026-09-01',
-    endDate: '2026-09-30',
-    status: 'EXPIRED',
-    emergencyContact: { name: 'Kavita Mehra', phone: '+91 98203 77777', relation: 'Mother' },
-    attendanceCount: 19,
-    lastCheckIn: '2026-09-29, 08:10 AM (Turnstile 02)',
-    invoicesCount: 1,
-    dueAmountInInr: 2950,
-  },
-  {
-    id: 'm-4',
-    memberId: 'IP-2026-0004',
-    name: 'Ananya Deshmukh',
-    phone: '+91 98204 45678',
-    email: 'ananya.d@gmail.com',
-    gender: 'FEMALE',
-    plan: 'Half-Yearly Elite (6M)',
-    planPriceInInr: 11500,
-    startDate: '2026-06-15',
-    endDate: '2026-12-14',
-    status: 'ACTIVE',
-    emergencyContact: { name: 'Vikram Deshmukh', phone: '+91 98204 66666', relation: 'Brother' },
-    attendanceCount: 51,
-    lastCheckIn: 'Today, 08:30 AM (Turnstile 01)',
-    invoicesCount: 1,
-    dueAmountInInr: 0,
-  },
-  {
-    id: 'm-5',
-    memberId: 'IP-2026-0005',
-    name: 'Kabir Kapoor',
-    phone: '+91 98205 56789',
-    email: 'kabir.k@gmail.com',
-    gender: 'MALE',
-    plan: 'Annual VIP Club (12M)',
-    planPriceInInr: 20000,
-    startDate: '2026-03-01',
-    endDate: '2027-03-15',
-    status: 'FROZEN',
-    emergencyContact: { name: 'Alia Kapoor', phone: '+91 98205 55555', relation: 'Spouse' },
-    attendanceCount: 34,
-    lastCheckIn: '2026-09-12, 07:00 PM (Turnstile 01)',
-    invoicesCount: 1,
-    dueAmountInInr: 0,
-  },
-  {
-    id: 'm-6',
-    memberId: 'IP-2026-0006',
-    name: 'Sunita Rao',
-    phone: '+91 98206 67890',
-    email: 'sunita.rao@hotmail.com',
-    gender: 'FEMALE',
-    plan: 'PT 24 Sessions',
-    planPriceInInr: 18000,
-    startDate: '2026-09-10',
-    endDate: '2026-11-09',
-    status: 'ACTIVE',
-    emergencyContact: { name: 'Govind Rao', phone: '+91 98206 44444', relation: 'Spouse' },
-    attendanceCount: 14,
-    lastCheckIn: 'Yesterday, 05:15 PM (Trainer Punch)',
-    invoicesCount: 1,
-    dueAmountInInr: 0,
-  },
-];
-
 export const MembersListPage: React.FC = () => {
   const { success, error: toastError } = useToast();
-  const [members, setMembers] = useState<MemberRecord[]>(INITIAL_MEMBERS);
+  const [members, setMembers] = useState<MemberRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'EXPIRED' | 'FROZEN'>('ALL');
+
+  const fetchMembers = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get('/members?limit=100');
+      if (res.success && Array.isArray(res.data)) {
+        const mapped: MemberRecord[] = res.data.map((m: any) => ({
+          id: m._id || m.id,
+          memberId: m.memberCode || m.memberId || `MEM-${(m._id || '').slice(-4)}`,
+          name: `${m.firstName || ''} ${m.lastName || ''}`.trim() || 'Unnamed Member',
+          phone: m.phone || '',
+          email: m.email || '',
+          gender: m.gender || 'MALE',
+          plan: m.currentMembership?.planName || 'Standard Membership',
+          planPriceInInr: m.currentMembership?.priceInInr ? m.currentMembership.priceInInr / 100 : 2500,
+          startDate: m.createdAt ? new Date(m.createdAt).toISOString().split('T')[0] : '',
+          endDate: m.currentMembership?.endDate ? new Date(m.currentMembership.endDate).toISOString().split('T')[0] : 'N/A',
+          status: m.status || 'ACTIVE',
+          emergencyContact: m.emergencyContact || { name: 'Emergency', phone: m.phone || '', relation: 'Family' },
+          attendanceCount: m.attendanceCount || 0,
+          lastCheckIn: m.lastCheckIn,
+          invoicesCount: m.invoicesCount || 0,
+          dueAmountInInr: m.dueAmountInInr || 0,
+        }));
+        setMembers(mapped);
+      } else {
+        setMembers([]);
+      }
+    } catch {
+      setMembers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
   // Registration Modal State
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -294,33 +223,53 @@ export const MembersListPage: React.FC = () => {
     },
   ];
 
-  const handleRegisterMember = (e: React.FormEvent) => {
+  const handleRegisterMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newSeq = members.length + 1;
-    const newMemberId = `IP-2026-${String(newSeq).padStart(4, '0')}`;
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
-    const newMember: MemberRecord = {
-      id: `m-${Date.now()}`,
-      memberId: newMemberId,
-      name: fullName,
-      phone: newPhone,
-      email: newEmail,
-      gender: newGender,
-      plan: newPlan,
-      planPriceInInr: newPlan.includes('Annual') ? 20000 : newPlan.includes('Half') ? 11500 : newPlan.includes('Quarterly') ? 6500 : 2500,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: '2027-10-06',
-      status: 'ACTIVE',
-      emergencyContact: { name: emergencyName || 'Emergency Contact', phone: emergencyPhone || newPhone, relation: emergencyRelation },
-      attendanceCount: 0,
-      invoicesCount: 1,
-      dueAmountInInr: 0,
-    };
+    try {
+      const res = await api.post('/members', {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: newPhone.trim(),
+        email: newEmail.trim(),
+        gender: newGender,
+        emergencyContact: {
+          name: emergencyName || 'Emergency Contact',
+          phone: emergencyPhone || newPhone,
+          relation: emergencyRelation || 'Family',
+        },
+        waiverAgreement: {
+          agreed: waiverSigned,
+          agreedAt: new Date().toISOString(),
+        },
+      });
 
-    setMembers([newMember, ...members]);
-    setIsRegisterModalOpen(false);
-    success('Member Registered with Atomic ID', `${fullName} enrolled under ${newMemberId}. Digital pass ready.`);
+      const memberId = res.data?.memberCode || res.data?.memberId || `MEM-${String(members.length + 1).padStart(4, '0')}`;
+      const newMember: MemberRecord = {
+        id: res.data?._id || `m-${Date.now()}`,
+        memberId,
+        name: fullName,
+        phone: newPhone,
+        email: newEmail,
+        gender: newGender,
+        plan: newPlan,
+        planPriceInInr: newPlan.includes('Annual') ? 20000 : newPlan.includes('Half') ? 11500 : newPlan.includes('Quarterly') ? 6500 : 2500,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '2027-10-06',
+        status: 'ACTIVE',
+        emergencyContact: { name: emergencyName || 'Emergency Contact', phone: emergencyPhone || newPhone, relation: emergencyRelation },
+        attendanceCount: 0,
+        invoicesCount: 1,
+        dueAmountInInr: 0,
+      };
+
+      setMembers([newMember, ...members]);
+      setIsRegisterModalOpen(false);
+      success('Member Registered', `${fullName} enrolled under ${memberId}. Digital pass ready.`);
+    } catch (err: any) {
+      toastError('Registration Failed', err?.message || 'Unable to register member.');
+    }
 
     // Reset form
     setFirstName('');
@@ -470,9 +419,12 @@ export const MembersListPage: React.FC = () => {
       <DataTable
         data={filteredMembers}
         columns={columns}
+        isLoading={isLoading}
         searchKey="name"
         searchPlaceholder="Search by member name, ID, or phone..."
         pageSize={10}
+        emptyTitle="No members found"
+        emptyDescription="No members are registered in this gym yet. Click '+ New Member' to enroll a member or 'Import CSV' to bulk upload."
       />
 
       {/* ========================================================================= */}
@@ -992,7 +944,7 @@ Kunal Trivedi, +919876543203, kunal.t@yahoo.com, Quarterly Pro
 Invalid Row, 12345, bad-email, Monthly Gold`)
               }
             >
-              Load Sample Data
+              Load CSV Template
             </Button>
           </div>
 
@@ -1000,7 +952,7 @@ Invalid Row, 12345, bad-email, Monthly Gold`)
             value={csvContent}
             onChange={(e) => handleParseCsv(e.target.value)}
             rows={5}
-            placeholder={`Aarav Mehta, +919820011223, aarav@gmail.com, Annual VIP Club\nPriya Sen, +919820011224, priya@gmail.com, Monthly Gold`}
+            placeholder={'Full Name, +919800000001, member@example.com, Annual Plan\nFull Name 2, +919800000002, member2@example.com, Monthly Plan'}
             className="w-full text-xs font-mono p-3 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
 

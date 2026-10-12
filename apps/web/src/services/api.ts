@@ -98,6 +98,26 @@ class ApiClient {
     }
   }
 
+  async patch<T = any>(path: string, body?: any): Promise<ApiResponse<T>> {
+    try {
+      const res = await fetch(`${BASE_URL}${path}`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return this.handleResponse<T>(res);
+    } catch (err: any) {
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: err?.message || 'Network connection error. Please verify the server is running.',
+        },
+      };
+    }
+  }
+
+
   async delete<T = any>(path: string): Promise<ApiResponse<T>> {
     try {
       const res = await fetch(`${BASE_URL}${path}`, {

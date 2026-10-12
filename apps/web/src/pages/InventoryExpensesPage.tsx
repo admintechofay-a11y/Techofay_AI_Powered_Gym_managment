@@ -16,6 +16,10 @@ import {
   ArrowUpRight,
   SlidersHorizontal,
 } from 'lucide-react';
+import { api } from '../services/api.js';
+import { EmptyState } from '../components/ui/EmptyState.js';
+import { ErrorState } from '../components/ui/ErrorState.js';
+import { LoadingSkeleton } from '../components/ui/LoadingSkeleton.js';
 
 interface InventoryItem {
   _id: string;
@@ -58,12 +62,35 @@ interface PnlData {
   };
 }
 
+const INITIAL_INVENTORY: InventoryItem[] = [];
+
+const INITIAL_EXPENSES: ExpenseItem[] = [];
+
+const INITIAL_PNL: PnlData = {
+  revenue: {
+    grossRevenueInPaise: 0,
+    grossRevenueFormatted: '₹0',
+  },
+  expenses: {
+    totalExpensesInPaise: 0,
+    totalExpensesFormatted: '₹0',
+    byCategory: [],
+  },
+  profitability: {
+    netProfitInPaise: 0,
+    netProfitFormatted: '₹0',
+    profitMargin: 0,
+    isProfitable: false,
+  },
+};
+
 export const InventoryExpensesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'expenses' | 'pnl' | 'suppliers'>('inventory');
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
-  const [pnl, setPnl] = useState<PnlData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>(INITIAL_EXPENSES);
+  const [pnl, setPnl] = useState<PnlData | null>(INITIAL_PNL);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
@@ -95,148 +122,35 @@ export const InventoryExpensesPage: React.FC = () => {
     unit: 'pcs',
   });
 
-  // Sample data fallback
-  const sampleInventory: InventoryItem[] = [
-    {
-      _id: 'inv-1',
-      name: 'Optimum Nutrition Gold Standard Whey 2kg',
-      sku: 'WHEY-ON-2KG',
-      category: 'SUPPLEMENTS',
-      costPriceInPaise: 450000,
-      sellingPriceInPaise: 620000,
-      quantityInStock: 18,
-      minThresholdAlert: 5,
-      isLowStock: false,
-      unit: 'tub',
-    },
-    {
-      _id: 'inv-2',
-      name: 'GymOS Performance Gym Shaker 700ml',
-      sku: 'SHAKER-700ML',
-      category: 'MERCHANDISE',
-      costPriceInPaise: 18000,
-      sellingPriceInPaise: 45000,
-      quantityInStock: 2,
-      minThresholdAlert: 5,
-      isLowStock: true,
-      unit: 'bottle',
-    },
-    {
-      _id: 'inv-3',
-      name: 'Creatine Monohydrate 300g Micronized',
-      sku: 'CREA-300G',
-      category: 'SUPPLEMENTS',
-      costPriceInPaise: 80000,
-      sellingPriceInPaise: 135000,
-      quantityInStock: 1,
-      minThresholdAlert: 4,
-      isLowStock: true,
-      unit: 'tub',
-    },
-    {
-      _id: 'inv-4',
-      name: 'Techofay Pro Lifting Wrist Straps',
-      sku: 'STRAPS-PRO',
-      category: 'ACCESSORIES',
-      costPriceInPaise: 25000,
-      sellingPriceInPaise: 59900,
-      quantityInStock: 14,
-      minThresholdAlert: 4,
-      isLowStock: false,
-      unit: 'pair',
-    },
-  ];
-
-  const sampleExpenses: ExpenseItem[] = [
-    {
-      _id: 'exp-1',
-      category: 'RENT',
-      amountInPaise: 15000000,
-      vendorName: 'Indiranagar Commercial Plaza',
-      paymentMethod: 'BANK_TRANSFER',
-      date: new Date().toISOString(),
-      notes: 'Monthly branch floor rental',
-    },
-    {
-      _id: 'exp-2',
-      category: 'UTILITIES',
-      amountInPaise: 4200000,
-      vendorName: 'Electricity & HVAC Services',
-      paymentMethod: 'UPI',
-      date: new Date().toISOString(),
-      notes: 'Air conditioning power consumption',
-    },
-    {
-      _id: 'exp-3',
-      category: 'SALARY',
-      amountInPaise: 28000000,
-      vendorName: 'Staff & Trainer Payroll',
-      paymentMethod: 'BANK_TRANSFER',
-      date: new Date().toISOString(),
-      notes: 'October trainers & front desk payroll',
-    },
-  ];
-
-  const samplePnl: PnlData = {
-    revenue: {
-      grossRevenueInPaise: 85000000,
-      grossRevenueFormatted: '₹8,50,000',
-    },
-    expenses: {
-      totalExpensesInPaise: 47200000,
-      totalExpensesFormatted: '₹4,72,000',
-      byCategory: [
-        { category: 'SALARY', amountInPaise: 28000000, percentageOfExpenses: 59 },
-        { category: 'RENT', amountInPaise: 15000000, percentageOfExpenses: 32 },
-        { category: 'UTILITIES', amountInPaise: 4200000, percentageOfExpenses: 9 },
-      ],
-    },
-    profitability: {
-      netProfitInPaise: 37800000,
-      netProfitFormatted: '₹3,78,000',
-      profitMargin: 44,
-      isProfitable: true,
-    },
-  };
-
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const token = localStorage.getItem('gymos_token');
       const [invRes, expRes, pnlRes] = await Promise.all([
-        fetch('/api/inventory', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/expenses', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/expenses/profit-and-loss', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get<any>('/inventory'),
+        api.get<any>('/expenses'),
+        api.get<any>('/expenses/profit-and-loss'),
       ]);
 
-      if (invRes.ok) {
-        const d = await invRes.json();
-        setInventory(d.data || []);
-      } else {
-        setInventory(sampleInventory);
+      if (invRes.success && invRes.data) {
+        const list = Array.isArray(invRes.data) ? invRes.data : invRes.data.items || [];
+        setInventory(list);
       }
 
-      if (expRes.ok) {
-        const d = await expRes.json();
-        setExpenses(d.data || []);
-      } else {
-        setExpenses(sampleExpenses);
+      if (expRes.success && expRes.data) {
+        const list = Array.isArray(expRes.data) ? expRes.data : expRes.data.expenses || [];
+        setExpenses(list);
       }
 
-      if (pnlRes.ok) {
-        const d = await pnlRes.json();
-        setPnl(d.data);
-      } else {
-        setPnl(samplePnl);
+      if (pnlRes.success && pnlRes.data) {
+        setPnl(pnlRes.data);
       }
     } catch {
-      setInventory(sampleInventory);
-      setExpenses(sampleExpenses);
-      setPnl(samplePnl);
+      // Keep resilient fallback to INITIAL_INVENTORY, INITIAL_EXPENSES, INITIAL_PNL
     } finally {
       setLoading(false);
     }
@@ -252,27 +166,18 @@ export const InventoryExpensesPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('gymos_token');
-      const res = await fetch('/api/inventory/adjust', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          inventoryId: selectedItem._id,
-          type: stockType,
-          quantity: stockQty,
-          reason: stockReason,
-        }),
+      const res = await api.post('/inventory/adjust', {
+        inventoryId: selectedItem._id,
+        type: stockType,
+        quantity: stockQty,
+        reason: stockReason,
       });
 
-      if (res.ok) {
+      if (res.success) {
         setShowStockModal(false);
         fetchData();
       } else {
-        const err = await res.json();
-        alert(err.error?.message || 'Stock adjustment failed');
+        alert(res.error?.message || 'Stock adjustment failed');
       }
     } catch {
       alert('Error updating stock');
@@ -282,30 +187,20 @@ export const InventoryExpensesPage: React.FC = () => {
   const handleCreateExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('gymos_token');
-      const res = await fetch('/api/expenses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          branchId: 'default-branch',
-          category: newExpense.category,
-          amountInPaise: Math.round(Number(newExpense.amount) * 100),
-          vendorName: newExpense.vendorName,
-          paymentMethod: newExpense.paymentMethod,
-          notes: newExpense.notes,
-        }),
+      const res = await api.post('/expenses', {
+        category: newExpense.category,
+        amountInPaise: Math.round(Number(newExpense.amount) * 100),
+        vendorName: newExpense.vendorName,
+        paymentMethod: newExpense.paymentMethod,
+        notes: newExpense.notes,
       });
 
-      if (res.ok) {
+      if (res.success) {
         setShowAddExpenseModal(false);
         setNewExpense({ category: 'UTILITIES', amount: '', vendorName: '', paymentMethod: 'UPI', notes: '' });
         fetchData();
       } else {
-        const err = await res.json();
-        alert(err.error?.message || 'Failed to record expense');
+        alert(res.error?.message || 'Failed to record expense');
       }
     } catch {
       alert('Error submitting expense');
@@ -320,7 +215,7 @@ export const InventoryExpensesPage: React.FC = () => {
     return matchSearch && matchCat;
   });
 
-  const currentPnl = pnl || samplePnl;
+  const currentPnl = pnl;
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
@@ -378,7 +273,7 @@ export const InventoryExpensesPage: React.FC = () => {
             <div>
               <span className="font-semibold">{lowStockItems.length} Inventory Items Low on Stock!</span>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {lowStockItems.map((i) => `${i.name} (${i.quantityInStock} ${i.unit} remaining)`).join(', ')}
+                {lowStockItems.map((i) => `${i.sku} (${i.quantityInStock} ${i.unit} left)`).join(', ')}
               </p>
             </div>
           </div>
@@ -392,46 +287,48 @@ export const InventoryExpensesPage: React.FC = () => {
       )}
 
       {/* P&L Snapshot Ribbon */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm flex items-center justify-between">
-          <div>
-            <div className="text-xs text-muted-foreground uppercase font-medium">Gross Revenue</div>
-            <div className="text-2xl font-bold text-foreground mt-1">{currentPnl.revenue.grossRevenueFormatted}</div>
-            <div className="text-xs text-emerald-400 flex items-center gap-1 mt-0.5">
-              <ArrowUpRight className="w-3.5 h-3.5" /> From Member Invoices
+      {currentPnl && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm flex items-center justify-between">
+            <div>
+              <div className="text-xs text-muted-foreground uppercase font-medium">Gross Revenue</div>
+              <div className="text-2xl font-bold text-foreground mt-1">{currentPnl.revenue.grossRevenueFormatted}</div>
+              <div className="text-xs text-emerald-400 flex items-center gap-1 mt-0.5">
+                <ArrowUpRight className="w-3.5 h-3.5" /> From Member Invoices
+              </div>
             </div>
+            <span className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
+              <DollarSign className="w-6 h-6" />
+            </span>
           </div>
-          <span className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <DollarSign className="w-6 h-6" />
-          </span>
-        </div>
 
-        <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm flex items-center justify-between">
-          <div>
-            <div className="text-xs text-muted-foreground uppercase font-medium">Operating Expenses</div>
-            <div className="text-2xl font-bold text-foreground mt-1">{currentPnl.expenses.totalExpensesFormatted}</div>
-            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-              <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" /> Utilities, Salary, Rent
+          <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm flex items-center justify-between">
+            <div>
+              <div className="text-xs text-muted-foreground uppercase font-medium">Operating Expenses</div>
+              <div className="text-2xl font-bold text-foreground mt-1">{currentPnl.expenses.totalExpensesFormatted}</div>
+              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" /> Utilities, Salary, Rent
+              </div>
             </div>
+            <span className="p-3 rounded-xl bg-rose-500/10 text-rose-400">
+              <TrendingDown className="w-6 h-6" />
+            </span>
           </div>
-          <span className="p-3 rounded-xl bg-rose-500/10 text-rose-400">
-            <TrendingDown className="w-6 h-6" />
-          </span>
-        </div>
 
-        <div className="p-5 rounded-2xl bg-card border border-emerald-500/40 shadow-md shadow-emerald-950/20 flex items-center justify-between">
-          <div>
-            <div className="text-xs text-muted-foreground uppercase font-medium">Net Profit / EBITDA</div>
-            <div className="text-2xl font-bold text-emerald-400 mt-1">{currentPnl.profitability.netProfitFormatted}</div>
-            <div className="text-xs font-semibold text-foreground mt-0.5">
-              Margin: {currentPnl.profitability.profitMargin}%
+          <div className="p-5 rounded-2xl bg-card border border-emerald-500/40 shadow-md shadow-emerald-950/20 flex items-center justify-between">
+            <div>
+              <div className="text-xs text-muted-foreground uppercase font-medium">Net Profit / EBITDA</div>
+              <div className="text-2xl font-bold text-emerald-400 mt-1">{currentPnl.profitability.netProfitFormatted}</div>
+              <div className="text-xs font-semibold text-foreground mt-0.5">
+                Margin: {currentPnl.profitability.profitMargin}%
+              </div>
             </div>
+            <span className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
+              <TrendingUp className="w-6 h-6" />
+            </span>
           </div>
-          <span className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <TrendingUp className="w-6 h-6" />
-          </span>
         </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-border gap-6 text-sm font-medium">
@@ -499,168 +396,205 @@ export const InventoryExpensesPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-border bg-card">
-            <table className="w-full text-left text-sm text-foreground">
-              <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                <tr>
-                  <th className="py-3 px-4">Item & SKU</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">In Stock</th>
-                  <th className="py-3 px-4">Selling Price</th>
-                  <th className="py-3 px-4">Cost Price</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredInventory.map((item) => (
-                  <tr key={item._id} className="hover:bg-muted/20 transition-colors">
-                    <td className="py-3.5 px-4 font-medium">
-                      <div>{item.name}</div>
-                      <div className="text-xs font-mono text-muted-foreground">{item.sku}</div>
-                    </td>
-                    <td className="py-3.5 px-4 text-xs font-medium text-muted-foreground">
-                      {item.category}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-foreground">
-                      {item.quantityInStock} {item.unit}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-emerald-400 font-medium">
-                      ₹{(item.sellingPriceInPaise / 100).toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-muted-foreground text-xs">
-                      ₹{(item.costPriceInPaise / 100).toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      {item.isLowStock || item.quantityInStock <= item.minThresholdAlert ? (
-                        <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          Low Stock
-                        </span>
-                      ) : (
-                        <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400">
-                          Adequate
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setStockType('STOCK_IN');
-                          setStockQty(5);
-                          setShowStockModal(true);
-                        }}
-                        className="px-2.5 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 font-medium transition-colors"
-                      >
-                        + Stock In
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setStockType('STOCK_OUT');
-                          setStockQty(1);
-                          setShowStockModal(true);
-                        }}
-                        className="px-2.5 py-1 text-xs rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-medium transition-colors"
-                      >
-                        - Stock Out
-                      </button>
-                    </td>
+          {loading && <LoadingSkeleton count={3} />}
+          {error && !loading && <ErrorState message={error} onRetry={fetchData} />}
+          {!loading && !error && filteredInventory.length === 0 && (
+            <EmptyState
+              title="No Inventory Items Found"
+              description="Track gym supplements, gear, accessories, and merchandise stock levels."
+            />
+          )}
+
+          {!loading && !error && filteredInventory.length > 0 && (
+            <div className="overflow-x-auto rounded-xl border border-border bg-card">
+              <table className="w-full text-left text-sm text-foreground">
+                <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                  <tr>
+                    <th className="py-3 px-4">Item & SKU</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4">In Stock</th>
+                    <th className="py-3 px-4">Selling Price</th>
+                    <th className="py-3 px-4">Cost Price</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredInventory.map((item) => (
+                    <tr key={item._id} className="hover:bg-muted/20 transition-colors">
+                      <td className="py-3.5 px-4 font-medium">
+                        <div>{item.name}</div>
+                        <div className="text-xs font-mono text-muted-foreground">{item.sku}</div>
+                      </td>
+                      <td className="py-3.5 px-4 text-xs font-medium text-muted-foreground">
+                        {item.category}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-foreground">
+                        {item.quantityInStock} {item.unit}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-emerald-400 font-medium">
+                        ₹{(item.sellingPriceInPaise / 100).toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-muted-foreground text-xs">
+                        ₹{(item.costPriceInPaise / 100).toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {item.isLowStock || item.quantityInStock <= item.minThresholdAlert ? (
+                          <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            Low Stock
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400">
+                            Adequate
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-right space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setStockType('STOCK_IN');
+                            setStockQty(5);
+                            setShowStockModal(true);
+                          }}
+                          className="px-2.5 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 font-medium transition-colors"
+                        >
+                          + Stock In
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setStockType('STOCK_OUT');
+                            setStockQty(1);
+                            setShowStockModal(true);
+                          }}
+                          className="px-2.5 py-1 text-xs rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-medium transition-colors"
+                        >
+                          - Stock Out
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
       {/* Tab 2: Expenses Tracker */}
       {activeTab === 'expenses' && (
         <div className="space-y-4">
-          <div className="overflow-x-auto rounded-xl border border-border bg-card">
-            <table className="w-full text-left text-sm text-foreground">
-              <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                <tr>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Vendor / Payee</th>
-                  <th className="py-3 px-4">Method</th>
-                  <th className="py-3 px-4">Amount</th>
-                  <th className="py-3 px-4">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {expenses.map((exp) => (
-                  <tr key={exp._id} className="hover:bg-muted/20 transition-colors">
-                    <td className="py-3.5 px-4 font-mono text-xs text-muted-foreground">
-                      {new Date(exp.date).toLocaleDateString('en-IN')}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-muted border border-border">
-                        {exp.category}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 font-medium">{exp.vendorName}</td>
-                    <td className="py-3.5 px-4 text-xs font-mono">{exp.paymentMethod}</td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-rose-400">
-                      ₹{(exp.amountInPaise / 100).toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-muted-foreground">{exp.notes || '-'}</td>
+          {loading && <LoadingSkeleton count={3} />}
+          {error && !loading && <ErrorState message={error} onRetry={fetchData} />}
+          {!loading && !error && expenses.length === 0 && (
+            <EmptyState
+              title="No Expenses Recorded"
+              description="Record recurring and one-off operating costs to keep accurate financial ledgers."
+              actionLabel="Record Expense"
+              onAction={() => setShowAddExpenseModal(true)}
+            />
+          )}
+
+          {!loading && !error && expenses.length > 0 && (
+            <div className="overflow-x-auto rounded-xl border border-border bg-card">
+              <table className="w-full text-left text-sm text-foreground">
+                <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                  <tr>
+                    <th className="py-3 px-4">Date</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4">Vendor / Payee</th>
+                    <th className="py-3 px-4">Method</th>
+                    <th className="py-3 px-4">Amount</th>
+                    <th className="py-3 px-4">Notes</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {expenses.map((exp) => (
+                    <tr key={exp._id} className="hover:bg-muted/20 transition-colors">
+                      <td className="py-3.5 px-4 font-mono text-xs text-muted-foreground">
+                        {new Date(exp.date).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-muted border border-border">
+                          {exp.category}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 font-medium">{exp.vendorName}</td>
+                      <td className="py-3.5 px-4 text-xs font-mono">{exp.paymentMethod}</td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-rose-400">
+                        ₹{(exp.amountInPaise / 100).toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3.5 px-4 text-xs text-muted-foreground">{exp.notes || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
       {/* Tab 3: Profit & Loss Statement */}
       {activeTab === 'pnl' && (
         <div className="p-6 rounded-2xl bg-card border border-border space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-bold text-foreground">Comprehensive Profit & Loss (P&L) Statement</h3>
-              <p className="text-sm text-muted-foreground">Real-time consolidated financials for current billing cycle</p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-muted-foreground">EBITDA Margin</div>
-              <div className="text-2xl font-bold text-emerald-400">{currentPnl.profitability.profitMargin}%</div>
-            </div>
-          </div>
+          {loading && <LoadingSkeleton count={3} />}
+          {error && !loading && <ErrorState message={error} onRetry={fetchData} />}
+          {!loading && !error && !currentPnl && (
+            <EmptyState
+              title="No Profit & Loss Statement Available"
+              description="Financial metrics will calculate automatically once sales and expense transactions are recorded."
+            />
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
-                <ArrowUpRight className="w-4 h-4 text-emerald-400" /> Revenue Sources
-              </h4>
-              <div className="p-4 rounded-xl border border-border bg-background space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Membership Subscriptions & Renewals</span>
-                  <span className="font-semibold">{currentPnl.revenue.grossRevenueFormatted}</span>
+          {!loading && !error && currentPnl && (
+            <>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Comprehensive Profit & Loss (P&L) Statement</h3>
+                  <p className="text-sm text-muted-foreground">Real-time consolidated financials for current billing cycle</p>
                 </div>
-                <div className="flex justify-between text-sm text-muted-foreground text-xs">
-                  <span>Supplements & Retail Sales</span>
-                  <span>Included in Gross Total</span>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">EBITDA Margin</div>
+                  <div className="text-2xl font-bold text-emerald-400">{currentPnl.profitability.profitMargin}%</div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
-                <ArrowDownRight className="w-4 h-4 text-rose-400" /> Operating Cost Breakdown
-              </h4>
-              <div className="space-y-2">
-                {currentPnl.expenses.byCategory.map((cat) => (
-                  <div key={cat.category} className="p-3 rounded-lg border border-border bg-background flex justify-between text-xs">
-                    <span className="font-medium text-foreground">{cat.category}</span>
-                    <span className="font-mono">
-                      ₹{(cat.amountInPaise / 100).toLocaleString('en-IN')} ({cat.percentageOfExpenses}%)
-                    </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                    <ArrowUpRight className="w-4 h-4 text-emerald-400" /> Revenue Sources
+                  </h4>
+                  <div className="p-4 rounded-xl border border-border bg-background space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Membership Subscriptions & Renewals</span>
+                      <span className="font-semibold">{currentPnl.revenue.grossRevenueFormatted}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-muted-foreground text-xs">
+                      <span>Supplements & Retail Sales</span>
+                      <span>Included in Gross Total</span>
+                    </div>
                   </div>
-                ))}
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                    <ArrowDownRight className="w-4 h-4 text-rose-400" /> Operating Cost Breakdown
+                  </h4>
+                  <div className="space-y-2">
+                    {currentPnl.expenses.byCategory.map((cat) => (
+                      <div key={cat.category} className="p-3 rounded-lg border border-border bg-background flex justify-between text-xs">
+                        <span className="font-medium text-foreground">{cat.category}</span>
+                        <span className="font-mono">
+                          ₹{(cat.amountInPaise / 100).toLocaleString('en-IN')} ({cat.percentageOfExpenses}%)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       )}
 

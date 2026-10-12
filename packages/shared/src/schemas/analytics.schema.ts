@@ -1,12 +1,17 @@
 import { z } from 'zod';
 import { REPORT_FORMAT, REPORT_TYPE, SCHEDULE_FREQUENCY } from '../constants/enums.js';
 
-export const NaturalLanguageReportQuerySchema = z.object({
-  query: z.string().min(3).max(1000),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  branchId: z.string().optional(),
-});
+export const NaturalLanguageReportQuerySchema = z
+  .object({
+    query: z.string().min(3).max(1000).optional(),
+    question: z.string().min(3).max(1000).optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    branchId: z.string().optional(),
+  })
+  .refine((data) => !!(data.query || data.question), {
+    message: 'Either query or question is required',
+  });
 export type NaturalLanguageReportQuery = z.infer<typeof NaturalLanguageReportQuerySchema>;
 
 export const ChatbotQuerySchema = z.object({

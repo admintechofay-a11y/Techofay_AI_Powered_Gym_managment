@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext.js';
+import { useAuth } from '../context/AuthContext.js';
 import {
   QrCode,
   Dumbbell,
@@ -15,6 +16,7 @@ import {
 export const MemberPWALayout: React.FC = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
 
   const navItems = [
     { label: 'Pass', path: '/member-portal', icon: QrCode },
@@ -66,8 +68,8 @@ export const MemberPWALayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted/40 border border-border text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-foreground">Aarav Nambiar</span>
-              <span className="text-[10px] text-muted-foreground font-mono">IP-FIT-001</span>
+              <span className="font-semibold text-foreground">{user?.name || user?.email || 'Member Pass'}</span>
+              <span className="text-[10px] text-muted-foreground font-mono">{user?.role || 'ACTIVE'}</span>
             </div>
 
             <button

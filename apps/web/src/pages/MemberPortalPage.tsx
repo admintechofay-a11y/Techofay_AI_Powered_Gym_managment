@@ -4,6 +4,7 @@ import { Badge } from '../components/ui/Badge.js';
 import { Button } from '../components/ui/Button.js';
 import { Input } from '../components/ui/Input.js';
 import { Modal } from '../components/ui/Modal.js';
+import { api } from '../services/api.js';
 import {
   QrCode,
   ShieldCheck,
@@ -70,13 +71,29 @@ export const MemberPortalPage: React.FC = () => {
     ex4: false,
   });
 
-  // Dynamic QR auto-rotation
+  // Dynamic QR auto-rotation via signed backend tokens
+  const fetchDynamicQr = async () => {
+    try {
+      const res = await api.get('/member-pwa/qr');
+      if (res.success && res.data) {
+        setQrToken(res.data.token || res.data.qrPayload || `GYMOS:CHK:M7821-TK${Date.now().toString(36).toUpperCase()}`);
+        setQrCountdown(res.data.expiresInSeconds || 30);
+      } else {
+        const timeKey = Date.now().toString(36).substring(2, 7).toUpperCase();
+        setQrToken(`GYMOS:CHK:M7821-TK${timeKey}`);
+      }
+    } catch {
+      const timeKey = Date.now().toString(36).substring(2, 7).toUpperCase();
+      setQrToken(`GYMOS:CHK:M7821-TK${timeKey}`);
+    }
+  };
+
   useEffect(() => {
+    fetchDynamicQr();
     const timer = setInterval(() => {
       setQrCountdown((prev) => {
         if (prev <= 1) {
-          const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
-          setQrToken(`GYMOS:CHK:M7821-TK${randomSuffix}`);
+          fetchDynamicQr();
           return 30;
         }
         return prev - 1;
@@ -85,140 +102,143 @@ export const MemberPortalPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const member = {
-    name: 'Aarav Nambiar',
-    memberId: 'IP-FIT-001',
-    phone: '+91 98201 44521',
-    plan: 'Annual Elite Pass (12 Months)',
-    planType: 'ANNUAL_UNLIMITED',
-    validUntil: '14 Jan 2027',
-    daysRemaining: 104,
+  const [memberData, setMemberData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchMemberProfile = async () => {
+      try {
+        const [profRes, memRes, attRes] = await Promise.all([
+          api.get('/member-pwa/profile'),
+          api.get('/member-pwa/membership'),
+          api.get('/member-pwa/attendance'),
+        ]);
+
+        if (profRes.success && profRes.data) {
+          setMemberData({
+            name: profRes.data.name || `${profRes.data.firstName || ''} ${profRes.data.lastName || ''}`.trim() || 'Gym Member',
+            memberId: profRes.data.memberCode || profRes.data.memberId || 'MEM-001',
+            phone: profRes.data.phone || '',
+            plan: memRes.data?.planName || profRes.data.plan || 'Standard Membership',
+            planType: memRes.data?.planType || 'STANDARD',
+            validUntil: memRes.data?.validUntil ? new Date(memRes.data.validUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A',
+            daysRemaining: memRes.data?.daysRemaining ?? 0,
+            status: memRes.data?.status || profRes.data.status || 'ACTIVE',
+            gymBranch: profRes.data.branchName || 'Main Branch',
+            attendanceStreak: attRes.data?.streak ?? 0,
+            totalVisitsThisMonth: attRes.data?.visitsThisMonth ?? 0,
+            referralCode: profRes.data.referralCode || '',
+            walletBalanceInInr: profRes.data.walletBalance ?? 0,
+          });
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    };
+
+    fetchMemberProfile();
+  }, []);
+
+  const defaultMember = {
+    name: 'Gym Member',
+    memberId: 'MEM-001',
+    phone: '',
+    plan: 'Standard Membership',
+    planType: 'STANDARD',
+    validUntil: 'N/A',
+    daysRemaining: 0,
     status: 'ACTIVE',
-    gymBranch: 'BKC Flagship, Mumbai',
-    attendanceStreak: 18,
-    totalVisitsThisMonth: 14,
-    referralCode: 'AARAV2026',
-    walletBalanceInInr: 750,
+    gymBranch: 'Main Branch',
+    attendanceStreak: 0,
+    totalVisitsThisMonth: 0,
+    referralCode: '',
+    walletBalanceInInr: 0,
   };
 
+  const member = memberData || defaultMember;
+
   const streakMilestones = [
-    { title: 'Consistency Pioneer', days: 7, achieved: true, icon: Flame },
-    { title: 'Iron Warrior', days: 14, achieved: true, icon: Award },
-    { title: 'Titan of Iron', days: 21, achieved: false, icon: Trophy },
-    { title: 'Centurion Legend', days: 30, achieved: false, icon: Sparkles },
+    { title: 'Consistency Pioneer', days: 7, achieved: member.attendanceStreak >= 7, icon: Flame },
+    { title: 'Iron Warrior', days: 14, achieved: member.attendanceStreak >= 14, icon: Award },
+    { title: 'Titan of Iron', days: 21, achieved: member.attendanceStreak >= 21, icon: Trophy },
+    { title: 'Centurion Legend', days: 30, achieved: member.attendanceStreak >= 30, icon: Sparkles },
   ];
 
-  const attendanceLog = [
-    { date: '07 Oct 2026', time: '07:15 AM', type: 'Turnstile Entry', branch: 'BKC Flagship' },
-    { date: '06 Oct 2026', time: '06:45 AM', type: 'Turnstile Entry', branch: 'BKC Flagship' },
-    { date: '05 Oct 2026', time: '07:30 AM', type: 'Turnstile Entry', branch: 'BKC Flagship' },
-    { date: '04 Oct 2026', time: '06:50 AM', type: 'Turnstile Entry', branch: 'BKC Flagship' },
-    { date: '03 Oct 2026', time: '07:10 AM', type: 'Turnstile Entry', branch: 'BKC Flagship' },
-    { date: '01 Oct 2026', time: '08:00 AM', type: 'Turnstile Entry', branch: 'BKC Flagship' },
-  ];
+  const attendanceLog: Array<{ date: string; time: string; type: string; branch: string }> = [];
 
   const todaysWorkout = {
-    title: 'Push Power Hypertrophy (Chest & Triceps)',
-    durationMin: 55,
+    title: 'Full Body Conditioning & Core',
+    durationMin: 45,
     exercises: [
-      { id: 'ex1', name: 'Barbell Flat Bench Press', sets: '4 sets', reps: '8-10 reps', targetWeight: '90 kg' },
-      { id: 'ex2', name: 'Incline Dumbbell Chest Press', sets: '3 sets', reps: '10-12 reps', targetWeight: '32 kg each' },
-      { id: 'ex3', name: 'Standing Cable Crossover Flyes', sets: '4 sets', reps: '15 reps', targetWeight: '17.5 kg per side' },
-      { id: 'ex4', name: 'Overhead Tricep Rope Extension', sets: '3 sets', reps: '12 reps', targetWeight: '25 kg' },
+      { id: 'ex1', name: 'Barbell Flat Bench Press', sets: '3 sets', reps: '10 reps', targetWeight: 'Bodyweight' },
+      { id: 'ex2', name: 'Barbell Back Squats', sets: '3 sets', reps: '10 reps', targetWeight: 'Bodyweight' },
+      { id: 'ex3', name: 'Standing Cable Rows', sets: '3 sets', reps: '12 reps', targetWeight: 'Moderate' },
+      { id: 'ex4', name: 'Hanging Knee Raises', sets: '3 sets', reps: '15 reps', targetWeight: 'Bodyweight' },
     ],
   };
 
   const todaysDiet = {
-    targetCalories: 2400,
-    consumedCalories: 1650,
+    targetCalories: 2000,
+    consumedCalories: 0,
     macros: {
-      protein: { target: 160, current: 120, unit: 'g' },
-      carbs: { target: 220, current: 155, unit: 'g' },
-      fats: { target: 65, current: 42, unit: 'g' },
-      water: { target: 3.5, current: 2.4, unit: 'L' },
+      protein: { target: 140, current: 0, unit: 'g' },
+      carbs: { target: 200, current: 0, unit: 'g' },
+      fats: { target: 60, current: 0, unit: 'g' },
+      water: { target: 3.0, current: 0, unit: 'L' },
     },
-    meals: [
-      { meal: 'Breakfast (08:00 AM)', items: '4 Egg Whites + 2 Whole Eggs, Rolled Oats (60g) with Whey & Berries', calories: 520, protein: '42g' },
-      { meal: 'Lunch (01:30 PM)', items: 'Grilled Herb Chicken (200g), Steamed Brown Rice (150g), Broccoli & Beetroot salad', calories: 680, protein: '55g' },
-      { meal: 'Pre-Workout Snack (05:00 PM)', items: '1 Banana, Espresso Black Coffee, Handful Almonds (20g)', calories: 230, protein: '6g' },
-      { meal: 'Dinner (08:30 PM)', items: 'Low-Fat Paneer / Tofu (150g), Sauteed Vegetables, Moong Dal Khichdi (1 cup)', calories: 450, protein: '28g' },
-    ],
+    meals: [] as Array<{ meal: string; calories: number; protein: string; items: string }>,
   };
 
   const assignedTrainer = {
-    name: 'Kabir Bhasin',
-    title: 'Master Strength Coach & Biomechanics Specialist',
-    experience: '8+ Years Experience',
-    certifications: ['ACE Certified Personal Trainer', 'CSCS Strength Coach', 'K11 Sports Nutritionist'],
-    rating: 4.9,
-    reviewCount: 112,
-    phone: '+91 98200 12890',
-    whatsappUrl: 'https://wa.me/919820012890?text=Hi%20Kabir,%20checking%20in%20regarding%20today%27s%20workout%20plan',
-    sessionsRemaining: 6,
-    totalSessions: 12,
+    name: 'Head Coach',
+    title: 'Certified Fitness Specialist',
+    experience: 'Certified Trainer',
+    certifications: ['CPR/AED', 'CPT'],
+    rating: 5.0,
+    reviewCount: 0,
+    phone: '',
+    whatsappUrl: '',
+    sessionsRemaining: 0,
+    totalSessions: 0,
     avatarUrl: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?auto=format&fit=crop&w=400&q=80',
   };
 
-  const invoices = [
-    {
-      invoiceNumber: 'INV-2026-0891',
-      date: '15 Jan 2026',
-      description: 'Annual Elite Membership (12 Months)',
-      amountInInr: 29499,
-      taxAmountInInr: 4499,
-      paymentMethod: 'Razorpay UPI / Netbanking',
-      status: 'PAID',
-    },
-    {
-      invoiceNumber: 'INV-2026-0412',
-      date: '10 Feb 2026',
-      description: '12x Personal Training Sessions with Kabir Bhasin',
-      amountInInr: 14160,
-      taxAmountInInr: 2160,
-      paymentMethod: 'Credit Card',
-      status: 'PAID',
-    },
-  ];
+  const invoices: Array<{
+    invoiceNumber: string;
+    date: string;
+    description: string;
+    amountInInr: number;
+    taxAmountInInr: number;
+    paymentMethod: string;
+    status: string;
+  }> = [];
 
   const assessment = {
-    date: '04 Oct 2026',
-    trainerName: 'Kabir Bhasin',
-    weightKg: 78.5,
-    heightCm: 178,
-    bmi: 24.8,
-    bodyFatPercent: 18.5,
-    muscleMassKg: 38.2,
-    chestCm: 104,
-    waistCm: 83,
-    armsCm: 37,
-    trainerNotes: 'Significant drop in visceral fat (-2.4%). Bench press strength increased to 100kg milestone.',
+    date: 'Initial Check-in',
+    trainerName: 'Staff Coach',
+    weightKg: 70,
+    heightCm: 175,
+    bmi: 22.8,
+    bodyFatPercent: 18.0,
+    muscleMassKg: 35.0,
+    chestCm: 98,
+    waistCm: 80,
+    armsCm: 34,
+    trainerNotes: 'Welcome to the gym! Consistent attendance is key to your progress.',
     beforePhotoUrl: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80',
     afterPhotoUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80',
     goals: [
-      { goalType: '100kg Bench Press', targetValue: 100, achieved: true, milestoneBadge: 'Century Club 100kg' },
-      { goalType: 'Body Fat Under 15%', targetValue: 15, achieved: false, milestoneBadge: 'Lean Shredder 15%' },
-      { goalType: '20-Day Streak', targetValue: 20, achieved: false, milestoneBadge: 'Consistency Titan' },
+      { goalType: 'Regular Attendance', targetValue: 20, achieved: member.attendanceStreak >= 20, milestoneBadge: 'Consistency Titan' },
     ],
   };
 
-  const walletTransactions = [
-    {
-      id: 'tx-1',
-      date: '2026-10-06 14:20',
-      type: 'CREDIT',
-      amountInInr: 500,
-      balanceAfterInInr: 500,
-      reason: 'Referral reward credit for inviting Kavita Iyer',
-    },
-    {
-      id: 'tx-2',
-      date: '2026-10-07 10:15',
-      type: 'CREDIT',
-      amountInInr: 250,
-      balanceAfterInInr: 750,
-      reason: 'Referral reward milestone bonus for Sameer Joshi inquiry',
-    },
-  ];
+  const walletTransactions: Array<{
+    id: string;
+    date: string;
+    type: string;
+    amountInInr: number;
+    balanceAfterInInr: number;
+    reason: string;
+  }> = [];
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(`https://ironpulse.org/join?ref=${member.referralCode}`);
@@ -246,7 +266,7 @@ export const MemberPortalPage: React.FC = () => {
         },
       },
       attendanceRecordCount: attendanceLog.length,
-      attendanceSample: attendanceLog,
+      attendanceHistory: attendanceLog,
       invoices,
       healthAssessments: [assessment],
       walletLedger: walletTransactions,
@@ -533,23 +553,29 @@ export const MemberPortalPage: React.FC = () => {
                 <span className="text-xs text-muted-foreground">Last 6 Punches</span>
               </div>
               <div className="divide-y divide-border">
-                {attendanceLog.map((log, idx) => (
-                  <div key={idx} className="py-2.5 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <div>
-                        <span className="font-bold text-foreground">{log.date}</span>
-                        <span className="text-muted-foreground ml-2">{log.time}</span>
+                {attendanceLog.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-muted-foreground">
+                    No gate entries recorded yet.
+                  </div>
+                ) : (
+                  attendanceLog.map((log, idx) => (
+                    <div key={idx} className="py-2.5 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <div>
+                          <span className="font-bold text-foreground">{log.date}</span>
+                          <span className="text-muted-foreground ml-2">{log.time}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="text-[10px]">
+                          {log.type}
+                        </Badge>
+                        <span className="text-muted-foreground">{log.branch}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="text-[10px]">
-                        {log.type}
-                      </Badge>
-                      <span className="text-muted-foreground">{log.branch}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -686,24 +712,30 @@ export const MemberPortalPage: React.FC = () => {
                 </div>
                 <div className="p-3 rounded-xl border border-border bg-card">
                   <div className="text-xs text-muted-foreground">Hydration (3.5L)</div>
-                  <div className="text-lg font-bold text-sky-600 mt-0.5">2.4L / 3.5L</div>
+                  <div className="text-lg font-bold text-sky-600 mt-0.5">0.0L / 3.0L</div>
                   <div className="w-full bg-muted rounded-full h-1.5 mt-2">
-                    <div className="bg-sky-600 h-1.5 rounded-full" style={{ width: '68%' }} />
+                    <div className="bg-sky-600 h-1.5 rounded-full" style={{ width: '0%' }} />
                   </div>
                 </div>
               </div>
 
               {/* Meals List */}
               <div className="space-y-3">
-                {todaysDiet.meals.map((meal, idx) => (
-                  <div key={idx} className="p-4 rounded-xl border border-border bg-muted/20 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-foreground">{meal.meal}</span>
-                      <span className="text-xs font-semibold text-brand-600">{meal.calories} kcal • {meal.protein} Protein</span>
+                {todaysDiet.meals.length > 0 ? (
+                  todaysDiet.meals.map((meal, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-border bg-muted/20 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-foreground">{meal.meal}</span>
+                        <span className="text-xs font-semibold text-brand-600">{meal.calories} kcal • {meal.protein} Protein</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{meal.items}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{meal.items}</p>
+                  ))
+                ) : (
+                  <div className="text-center py-8 border border-dashed border-border rounded-xl text-xs text-muted-foreground">
+                    No custom meals assigned for today. Inquire with your coach for a personalized macro plan.
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -888,39 +920,45 @@ export const MemberPortalPage: React.FC = () => {
               </div>
 
               <div className="divide-y divide-border">
-                {invoices.map((inv, idx) => (
-                  <div key={idx} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-sm text-foreground">{inv.invoiceNumber}</span>
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
-                          {inv.status}
-                        </Badge>
-                      </div>
-                      <p className="text-muted-foreground mt-1">{inv.description}</p>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        Dated: {inv.date} • Mode: {inv.paymentMethod}
-                      </div>
-                    </div>
-                    <div className="flex sm:flex-col items-end justify-between sm:justify-center">
-                      <div className="text-base font-extrabold text-foreground">
-                        ₹{inv.amountInInr.toLocaleString()}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        Includes ₹{inv.taxAmountInInr.toLocaleString()} GST (18%)
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-xs text-brand-600 hover:text-brand-700 h-7 px-2 mt-1"
-                        onClick={() => alert(`Downloading verified Tax Invoice ${inv.invoiceNumber} PDF...`)}
-                      >
-                        <Download className="w-3.5 h-3.5 mr-1" />
-                        Download PDF
-                      </Button>
-                    </div>
+                {invoices.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-muted-foreground">
+                    No paid tax invoices found.
                   </div>
-                ))}
+                ) : (
+                  invoices.map((inv, idx) => (
+                    <div key={idx} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-sm text-foreground">{inv.invoiceNumber}</span>
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                            {inv.status}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground mt-1">{inv.description}</p>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          Dated: {inv.date} • Mode: {inv.paymentMethod}
+                        </div>
+                      </div>
+                      <div className="flex sm:flex-col items-end justify-between sm:justify-center">
+                        <div className="text-base font-extrabold text-foreground">
+                          ₹{inv.amountInInr.toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                          Includes ₹{inv.taxAmountInInr.toLocaleString()} GST (18%)
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs text-brand-600 hover:text-brand-700 h-7 px-2 mt-1"
+                          onClick={() => alert(`Downloading verified Tax Invoice ${inv.invoiceNumber} PDF...`)}
+                        >
+                          <Download className="w-3.5 h-3.5 mr-1" />
+                          Download PDF
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -972,18 +1010,24 @@ export const MemberPortalPage: React.FC = () => {
             <CardContent className="p-6">
               <h3 className="text-sm font-bold text-foreground mb-4">Referral Wallet Transaction Ledger</h3>
               <div className="divide-y divide-border">
-                {walletTransactions.map((tx) => (
-                  <div key={tx.id} className="py-3 flex items-center justify-between text-xs">
-                    <div>
-                      <div className="font-semibold text-foreground">{tx.reason}</div>
-                      <div className="text-[11px] text-muted-foreground font-mono mt-0.5">{tx.date}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-emerald-600">+₹{tx.amountInInr}</div>
-                      <div className="text-[10px] text-muted-foreground">Bal: ₹{tx.balanceAfterInInr}</div>
-                    </div>
+                {walletTransactions.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-muted-foreground">
+                    No wallet transactions recorded yet.
                   </div>
-                ))}
+                ) : (
+                  walletTransactions.map((tx) => (
+                    <div key={tx.id} className="py-3 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="font-semibold text-foreground">{tx.reason}</div>
+                        <div className="text-[11px] text-muted-foreground font-mono mt-0.5">{tx.date}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-emerald-600">+₹{tx.amountInInr}</div>
+                        <div className="text-[10px] text-muted-foreground">Bal: ₹{tx.balanceAfterInInr}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

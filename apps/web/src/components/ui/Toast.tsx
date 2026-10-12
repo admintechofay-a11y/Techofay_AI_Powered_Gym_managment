@@ -22,6 +22,8 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+let toastIdCounter = 0;
+
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
@@ -31,7 +33,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addToast = useCallback(
     ({ type = 'info', title, message }: { type?: ToastType; title: string; message?: string }) => {
-      const id = Math.random().toString(36).substring(2, 9);
+      const id = `toast-${Date.now()}-${++toastIdCounter}`;
       setToasts((prev) => [...prev, { id, type, title, message }]);
       setTimeout(() => removeToast(id), 5000);
     },

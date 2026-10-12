@@ -102,7 +102,7 @@ export const ContactPage: React.FC = () => {
         <div>
           <Card className="border-border/80 shadow-lg">
             <CardContent className="p-8">
-              <h2 className="text-xl font-bold text-foreground mb-6">Schedule a Personalized Demo</h2>
+              <h2 className="text-xl font-bold text-foreground mb-6">Schedule a Consultation & Architecture Walkthrough</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                   label="Your Full Name"
@@ -157,7 +157,7 @@ export const ContactPage: React.FC = () => {
                   isLoading={isSubmitting}
                   rightIcon={<Send className="w-4 h-4" />}
                 >
-                  Submit Demo Request
+                  Submit Consultation Request
                 </Button>
               </form>
             </CardContent>

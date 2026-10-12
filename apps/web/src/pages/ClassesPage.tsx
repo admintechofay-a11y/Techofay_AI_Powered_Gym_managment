@@ -63,138 +63,9 @@ export interface TrialBookingItem {
   attendedAt?: string;
 }
 
-const INITIAL_SCHEDULE: ClassSlotItem[] = [
-  {
-    id: 'slot-1',
-    name: 'CrossFit WOD & Metabolic Conditioning',
-    category: 'CrossFit',
-    trainerName: 'Kabir Bhasin',
-    trainerId: 'tr-1',
-    room: 'Main Arena Box',
-    time: '07:00 AM - 08:00 AM',
-    durationMinutes: 60,
-    capacity: 20,
-    bookedCount: 19,
-    waitlistCapacity: 5,
-    waitlistCount: 2,
-    date: '2026-10-15',
-    attendees: [
-      { id: 'att-1', bookingId: 'b-1', memberName: 'Aarav Nambiar', memberCode: 'IP-FIT-001', bookingType: 'CLASS', status: 'CONFIRMED' },
-      { id: 'att-2', bookingId: 'b-2', memberName: 'Kavita Iyer', memberCode: 'IP-FIT-002', bookingType: 'CLASS', status: 'CONFIRMED' },
-      { id: 'att-3', bookingId: 'b-3', memberName: 'Rohan Mehra', memberCode: 'PROSPECT-01', bookingType: 'TRIAL', status: 'CONFIRMED' },
-      { id: 'att-4', bookingId: 'b-4', memberName: 'Siddharth Roy', memberCode: 'IP-FIT-004', bookingType: 'CLASS', status: 'WAITLISTED', waitlistPosition: 1 },
-      { id: 'att-5', bookingId: 'b-5', memberName: 'Meera Rajput', memberCode: 'IP-FIT-005', bookingType: 'CLASS', status: 'WAITLISTED', waitlistPosition: 2 },
-    ],
-  },
-  {
-    id: 'slot-2',
-    name: 'Olympic Snatch & Clean Pulls Masterclass',
-    category: 'Weightlifting',
-    trainerName: 'Kabir Bhasin',
-    trainerId: 'tr-1',
-    room: 'Olympic Platforms',
-    time: '09:00 AM - 10:15 AM',
-    durationMinutes: 75,
-    capacity: 12,
-    bookedCount: 12,
-    waitlistCapacity: 4,
-    waitlistCount: 3,
-    date: '2026-10-15',
-    attendees: [
-      { id: 'att-6', bookingId: 'b-6', memberName: 'Devendra Patel', memberCode: 'IP-FIT-006', bookingType: 'CLASS', status: 'CONFIRMED' },
-      { id: 'att-7', bookingId: 'b-7', memberName: 'Vikram Singhania', memberCode: 'PROSPECT-02', bookingType: 'TRIAL', status: 'WAITLISTED', waitlistPosition: 1 },
-    ],
-  },
-  {
-    id: 'slot-3',
-    name: 'Power Vinyasa & Core Mobility',
-    category: 'Yoga',
-    trainerName: 'Ananya Deshmukh',
-    trainerId: 'tr-2',
-    room: 'Zen Studio',
-    time: '11:00 AM - 12:00 PM',
-    durationMinutes: 60,
-    capacity: 25,
-    bookedCount: 14,
-    waitlistCapacity: 5,
-    waitlistCount: 0,
-    date: '2026-10-15',
-    attendees: [
-      { id: 'att-8', bookingId: 'b-8', memberName: 'Pooja Hegde', memberCode: 'IP-FIT-008', bookingType: 'CLASS', status: 'CONFIRMED' },
-    ],
-  },
-  {
-    id: 'slot-4',
-    name: 'High Intensity Spin & Cardio Blast',
-    category: 'Spin',
-    trainerName: 'Sameer Sen',
-    trainerId: 'tr-3',
-    room: 'Spinning Studio 2',
-    time: '05:30 PM - 06:30 PM',
-    durationMinutes: 60,
-    capacity: 20,
-    bookedCount: 17,
-    waitlistCapacity: 5,
-    waitlistCount: 0,
-    date: '2026-10-15',
-    attendees: [
-      { id: 'att-9', bookingId: 'b-9', memberName: 'Rahul Verma', memberCode: 'IP-FIT-009', bookingType: 'CLASS', status: 'CONFIRMED' },
-    ],
-  },
-  {
-    id: 'slot-5',
-    name: 'Evening Strength & Hypertrophy Circuit',
-    category: 'HIIT',
-    trainerName: 'Kabir Bhasin',
-    trainerId: 'tr-1',
-    room: 'Main Gym Floor',
-    time: '07:00 PM - 08:00 PM',
-    durationMinutes: 60,
-    capacity: 18,
-    bookedCount: 18,
-    waitlistCapacity: 4,
-    waitlistCount: 1,
-    date: '2026-10-15',
-    attendees: [
-      { id: 'att-10', bookingId: 'b-10', memberName: 'Nikhil Mehta', memberCode: 'IP-FIT-010', bookingType: 'CLASS', status: 'CONFIRMED' },
-    ],
-  },
-];
+const INITIAL_SCHEDULE: ClassSlotItem[] = [];
 
-const INITIAL_TRIALS: TrialBookingItem[] = [
-  {
-    id: 'tr-book-1',
-    prospectName: 'Rohan Mehra',
-    prospectPhone: '+91 98222 33445',
-    prospectEmail: 'rohan.mehra@ironpulse-crm.org',
-    classSlotName: 'CrossFit WOD & Metabolic Conditioning',
-    slotTime: '07:00 AM - 08:00 AM (15 Oct)',
-    trainerName: 'Kabir Bhasin',
-    status: 'SCHEDULED',
-  },
-  {
-    id: 'tr-book-2',
-    prospectName: 'Vikram Singhania',
-    prospectPhone: '+91 98333 77889',
-    prospectEmail: 'vikram.singhania@ironpulse-crm.org',
-    classSlotName: 'Olympic Snatch & Clean Pulls Masterclass',
-    slotTime: '09:00 AM - 10:15 AM (15 Oct)',
-    trainerName: 'Kabir Bhasin',
-    status: 'ATTENDED',
-    attendedAt: '2026-10-14T09:15:00Z',
-  },
-  {
-    id: 'tr-book-3',
-    prospectName: 'Aarti Deshmukh',
-    prospectPhone: '+91 98111 44556',
-    prospectEmail: 'aarti.deshmukh@ironpulse-crm.org',
-    classSlotName: 'Power Vinyasa & Core Mobility',
-    slotTime: '11:00 AM - 12:00 PM (14 Oct)',
-    trainerName: 'Ananya Deshmukh',
-    status: 'CONVERTED',
-    attendedAt: '2026-10-14T11:00:00Z',
-  },
-];
+const INITIAL_TRIALS: TrialBookingItem[] = [];
 
 export const ClassesPage: React.FC = () => {
   const { addToast } = useToast();
@@ -213,7 +84,7 @@ export const ClassesPage: React.FC = () => {
 
   // Booking Form
   const [bookingForm, setBookingForm] = useState({
-    memberName: 'Aarav Nambiar (IP-FIT-001)',
+    memberName: '',
     bookingType: 'CLASS' as 'CLASS' | 'PERSONAL_TRAINING' | 'TRIAL',
   });
 
@@ -222,11 +93,14 @@ export const ClassesPage: React.FC = () => {
     name: '',
     phone: '',
     email: '',
-    slotId: 'slot-1',
-    trainerName: 'Kabir Bhasin',
+    slotId: '',
+    trainerName: '',
   });
 
-  // Fetch real calendar on mount
+  const [membersList, setMembersList] = useState<any[]>([]);
+  const [trainersList, setTrainersList] = useState<any[]>([]);
+
+  // Fetch real calendar and members on mount
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
@@ -238,7 +112,22 @@ export const ClassesPage: React.FC = () => {
         // Fallback to initial schedule
       }
     };
+    const fetchAux = async () => {
+      try {
+        const mRes = await api.get<any[]>('/members');
+        if (mRes.success && Array.isArray(mRes.data)) setMembersList(mRes.data);
+      } catch {
+        // Fallback or ignore if members endpoint fails
+      }
+      try {
+        const tRes = await api.get<any[]>('/trainers');
+        if (tRes.success && Array.isArray(tRes.data)) setTrainersList(tRes.data);
+      } catch {
+        // Fallback or ignore if trainers endpoint fails
+      }
+    };
     fetchSchedule();
+    fetchAux();
   }, []);
 
   const filteredSchedule = schedule.filter(
@@ -504,15 +393,20 @@ export const ClassesPage: React.FC = () => {
       {/* TAB 1: CALENDAR / SCHEDULE VIEW */}
       {activeTab === 'CALENDAR' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredSchedule.map((slot) => {
-            const isFull = slot.bookedCount >= slot.capacity;
-            const percentageBooked = Math.round((slot.bookedCount / slot.capacity) * 100);
+          {filteredSchedule.length === 0 ? (
+            <div className="col-span-full py-16 text-center text-xs text-muted-foreground border-2 border-dashed border-border/60 rounded-2xl">
+              No class sessions scheduled. Click "Schedule New Class" to create a timetable session.
+            </div>
+          ) : (
+            filteredSchedule.map((slot) => {
+              const isFull = slot.bookedCount >= slot.capacity;
+              const percentageBooked = Math.round((slot.bookedCount / slot.capacity) * 100);
 
-            return (
-              <div
-                key={slot.id}
-                className="bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 relative overflow-hidden group"
-              >
+              return (
+                <div
+                  key={slot.id}
+                  className="bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 relative overflow-hidden group"
+                >
                 {/* Top Badge & Room */}
                 <div className="flex items-center justify-between">
                   <Badge
@@ -629,7 +523,7 @@ export const ClassesPage: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
       )}
 
@@ -659,8 +553,15 @@ export const ClassesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {trials.map((trial) => (
-                  <tr key={trial.id} className="hover:bg-muted/30 transition-colors">
+                {trials.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10 text-xs text-muted-foreground">
+                      No trial class bookings recorded yet. Click "Book Free Trial" to register an incoming prospect.
+                    </td>
+                  </tr>
+                ) : (
+                  trials.map((trial) => (
+                    <tr key={trial.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3.5 font-semibold text-foreground">{trial.prospectName}</td>
                     <td className="px-4 py-3.5 text-muted-foreground">
                       <div>{trial.prospectPhone}</div>
@@ -709,7 +610,7 @@ export const ClassesPage: React.FC = () => {
                       )}
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
@@ -740,12 +641,14 @@ export const ClassesPage: React.FC = () => {
               label="Select Member"
               value={bookingForm.memberName}
               onChange={(e) => setBookingForm({ ...bookingForm, memberName: e.target.value })}
-              options={[
-                { value: 'Aarav Nambiar (IP-FIT-001)', label: 'Aarav Nambiar (IP-FIT-001)' },
-                { value: 'Kavita Iyer (IP-FIT-002)', label: 'Kavita Iyer (IP-FIT-002)' },
-                { value: 'Siddharth Roy (IP-FIT-004)', label: 'Siddharth Roy (IP-FIT-004)' },
-                { value: 'Ananya Sharma (IP-FIT-005)', label: 'Ananya Sharma (IP-FIT-005)' },
-              ]}
+              options={
+                membersList.length > 0
+                  ? membersList.map((m) => ({
+                      value: `${m.name} (${m.code || m.memberCode || ''})`,
+                      label: `${m.name} (${m.code || m.memberCode || ''})`,
+                    }))
+                  : [{ value: '', label: 'No members registered yet' }]
+              }
             />
 
             <Select
@@ -870,11 +773,14 @@ export const ClassesPage: React.FC = () => {
               label="Allocate Trainer"
               value={trialForm.trainerName}
               onChange={(e) => setTrialForm({ ...trialForm, trainerName: e.target.value })}
-              options={[
-                { value: 'Kabir Bhasin', label: 'Kabir Bhasin (Strength & CrossFit)' },
-                { value: 'Ananya Deshmukh', label: 'Ananya Deshmukh (Yoga & Mobility)' },
-                { value: 'Sameer Sen', label: 'Sameer Sen (Cardio & Spin)' },
-              ]}
+              options={
+                trainersList.length > 0
+                  ? trainersList.map((t) => ({
+                      value: t.name,
+                      label: `${t.name} (${t.specialization || 'Fitness Coach'})`,
+                    }))
+                  : [{ value: 'General Trainer', label: 'Duty Fitness Coach' }]
+              }
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">

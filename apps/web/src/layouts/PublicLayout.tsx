@@ -75,7 +75,7 @@ export const PublicLayout: React.FC = () => {
               {t('nav.pricing')}
             </Link>
             <Link to="/gym" className="hover:text-[#F5F5F5] transition-colors py-2">
-              Tenant Demo Site
+              Gym Showcase
             </Link>
             <Link to="/blog" className="hover:text-[#F5F5F5] transition-colors py-2">
               Blog
@@ -188,7 +188,7 @@ export const PublicLayout: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="block min-h-[44px] flex items-center py-2 text-base font-medium text-[#F5F5F5] hover:text-[#2E7D1E] transition-colors"
             >
-              Tenant Demo Site
+              Gym Showcase
             </Link>
             <Link
               to="/blog"

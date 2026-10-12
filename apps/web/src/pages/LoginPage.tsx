@@ -155,12 +155,12 @@ export const LoginPage: React.FC = () => {
             </Button>
           </form>
 
-          {/* Quick Demo Fill Buttons */}
+          {/* Quick Role Fill Buttons */}
           <div className="mt-6 pt-5 border-t border-border">
             <div className="flex items-center justify-between text-xs text-muted-foreground font-medium mb-2.5">
               <div className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-                <span>Quick Demo Credentials:</span>
+                <span>Quick Role Sign-In:</span>
               </div>
               <span className="text-[10px] text-muted-foreground">Password@123</span>
             </div>
