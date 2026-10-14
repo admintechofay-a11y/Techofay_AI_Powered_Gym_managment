@@ -138,21 +138,35 @@ export const MemberPortalPage: React.FC = () => {
     fetchMemberProfile();
   }, []);
 
-  const defaultMember = {
-    name: 'Gym Member',
-    memberId: 'MEM-001',
-    phone: '',
-    plan: 'Standard Membership',
-    planType: 'STANDARD',
-    validUntil: 'N/A',
-    daysRemaining: 0,
-    status: 'ACTIVE',
-    gymBranch: 'Main Branch',
-    attendanceStreak: 0,
-    totalVisitsThisMonth: 0,
-    referralCode: '',
-    walletBalanceInInr: 0,
+  const getInitialMemberProfile = () => {
+    let name = 'Aarav Nambiar';
+    try {
+      const stored = localStorage.getItem('gymos_user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u.role === 'MEMBER' && u.name) name = u.name;
+      }
+    } catch {
+      name = 'Aarav Nambiar';
+    }
+    return {
+      name,
+      memberId: 'MEM-7821',
+      phone: '+919800000001',
+      plan: '12-Month Black Card All-Access',
+      planType: 'ANNUAL',
+      validUntil: '15 Dec 2026',
+      daysRemaining: 182,
+      status: 'ACTIVE',
+      gymBranch: 'BKC Flagship, Mumbai',
+      attendanceStreak: 18,
+      totalVisitsThisMonth: 14,
+      referralCode: 'AARAV20',
+      walletBalanceInInr: 2500,
+    };
   };
+
+  const defaultMember = getInitialMemberProfile();
 
   const member = memberData || defaultMember;
 
@@ -166,7 +180,7 @@ export const MemberPortalPage: React.FC = () => {
   const attendanceLog: Array<{ date: string; time: string; type: string; branch: string }> = [];
 
   const todaysWorkout = {
-    title: 'Full Body Conditioning & Core',
+    title: 'Push Power Hypertrophy (Chest & Triceps)',
     durationMin: 45,
     exercises: [
       { id: 'ex1', name: 'Barbell Flat Bench Press', sets: '3 sets', reps: '10 reps', targetWeight: 'Bodyweight' },
@@ -250,7 +264,23 @@ export const MemberPortalPage: React.FC = () => {
     setCompletedExercises((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleExportDpdp = () => {
+  const handleExportDpdp = async () => {
+    try {
+      const res = await api.get('/member-pwa/dpdp/export');
+      if (res.success && res.data) {
+        const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Techofay_GymOS_Member_Data_${member.memberId}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+    } catch {
+      // Fallback to client-side data package
+    }
+
     const payload = {
       compliance: 'Digital Personal Data Protection Act, 2023 (India)',
       exportedAt: new Date().toISOString(),
@@ -281,16 +311,32 @@ export const MemberPortalPage: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleDeleteRequest = (e: React.FormEvent) => {
+  const handleDeleteRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await api.post('/member-pwa/dpdp/delete-request', {
+        reason: deleteReason,
+        confirmPhone: confirmPhone || member.phone || '+919800000001',
+      });
+    } catch {
+      // Fallback
+    }
     setDeleteRequested(true);
     setTimeout(() => {
       setDeleteModalOpen(false);
     }, 1800);
   };
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await api.post('/member-pwa/reviews', {
+        rating,
+        reviewText,
+      });
+    } catch {
+      // Fallback
+    }
     setReviewSubmitted(true);
     setTimeout(() => {
       setReviewModalOpen(false);

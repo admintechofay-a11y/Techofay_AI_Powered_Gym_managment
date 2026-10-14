@@ -259,7 +259,22 @@ const INITIAL_TEMPLATES: TemplateItem[] = [
   },
 ];
 
-const INITIAL_LOGS: CommunicationLogItem[] = [];
+const INITIAL_LOGS: CommunicationLogItem[] = [
+  {
+    id: 'log-sim-001',
+    recipientName: 'Vikram Malhotra',
+    recipientContact: '+91 98201 12345',
+    channel: 'WHATSAPP',
+    title: 'Membership 7-Day Expiry Notice',
+    message: 'Your Annual All-Access membership expires in 7 days. Renew today to lock in special rates!',
+    type: 'EXPIRY_REMINDER',
+    status: 'DELIVERED',
+    isSimulated: true,
+    dedupeKey: 'notif:tenant-01:vikram:EXPIRY_7D:2026-10-13',
+    sentAt: '2026-10-13 08:00:00',
+    deliveredAt: '2026-10-13 08:00:02',
+  },
+];
 
 export const CommunicationPage: React.FC = () => {
   const { addToast } = useToast();

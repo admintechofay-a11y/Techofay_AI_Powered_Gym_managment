@@ -113,17 +113,38 @@ export const TrainersPage: React.FC = () => {
 
   // Fetch real trainer data on mount
   useEffect(() => {
-    const fetchTrainers = async () => {
+    const fetchTrainersAndData = async () => {
       try {
-        const res = await api.get('/trainers');
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setTrainers(res.data);
+        const [tRes, ptRes] = await Promise.all([
+          api.get('/trainers'),
+          api.get('/trainers/pt-packages'),
+        ]);
+        if (tRes.success && Array.isArray(tRes.data) && tRes.data.length > 0) {
+          setTrainers(tRes.data);
+        }
+        if (ptRes.success && Array.isArray(ptRes.data) && ptRes.data.length > 0) {
+          setPtPackages(
+            ptRes.data.map((p: any) => ({
+              id: p._id || p.id,
+              memberName: p.memberName || 'Gym Member',
+              memberCode: p.memberCode || 'MBR-001',
+              trainerName: p.trainerName || 'Coach Staff',
+              trainerId: p.trainerId || 'tr-1',
+              packageName: p.name || 'PT 10 Sessions',
+              totalSessions: p.numberOfSessions || 10,
+              usedSessions: p.usedSessions || 0,
+              remainingSessions: (p.numberOfSessions || 10) - (p.usedSessions || 0),
+              priceInInr: (p.priceInPaise || 1500000) / 100,
+              expiryDate: p.expiryDate || '2026-12-31',
+              status: p.status || 'ACTIVE',
+            })),
+          );
         }
       } catch {
         // Fallback to rich initial state
       }
     };
-    fetchTrainers();
+    fetchTrainersAndData();
   }, []);
 
   // 1-Click Decrement Session
@@ -138,7 +159,11 @@ export const TrainersPage: React.FC = () => {
     }
 
     try {
-      await api.post(`/trainers/pt-packages/${pkg.id}/use-session`, {});
+      await api.post('/trainers/pt-sessions/use', {
+        membershipId: pkg.id.startsWith('pkg-') ? '650000000000000000000001' : pkg.id,
+        trainerId: pkg.trainerId?.startsWith('tr-') ? '650000000000000000000001' : (pkg.trainerId || '650000000000000000000001'),
+        sessionNotes: `1-Click PT session logged for ${pkg.memberName}`,
+      });
     } catch {
       // Local fallback
     }
@@ -184,7 +209,7 @@ export const TrainersPage: React.FC = () => {
   };
 
   // Add Trainer
-  const handleCreateTrainer = (e: React.FormEvent) => {
+  const handleCreateTrainer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTrainerForm.name || !newTrainerForm.email) {
       addToast({ title: 'Validation Error', message: 'Name and email are required', type: 'error' });
@@ -208,6 +233,26 @@ export const TrainersPage: React.FC = () => {
       activePtSessionsCount: 0,
       availability: [{ day: 'Mon - Fri', hours: '06:00 AM - 12:00 PM' }],
     };
+
+    try {
+      const res = await api.post('/trainers', {
+        userId: '650000000000000000000001',
+        branchIds: ['650000000000000000000001'],
+        name: created.name,
+        email: created.email,
+        phone: created.phone,
+        specializations: created.specializations,
+        qualifications: created.qualifications,
+        certifications: created.certifications,
+        bio: created.bio,
+        defaultCommissionRatePercent: created.commissionRatePercent,
+      });
+      if (res.success && res.data?._id) {
+        created.id = res.data._id;
+      }
+    } catch {
+      // Local fallback
+    }
 
     setTrainers([created, ...trainers]);
     setIsTrainerModalOpen(false);

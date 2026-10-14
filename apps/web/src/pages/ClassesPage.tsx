@@ -63,7 +63,40 @@ export interface TrialBookingItem {
   attendedAt?: string;
 }
 
-const INITIAL_SCHEDULE: ClassSlotItem[] = [];
+const INITIAL_SCHEDULE: ClassSlotItem[] = [
+  {
+    id: 'slot-1',
+    name: 'CrossFit WOD & Metabolic Conditioning',
+    category: 'CrossFit',
+    trainerName: 'Arjun Khanna',
+    trainerId: 'tr-1',
+    room: 'Main Cross-Training Arena',
+    time: '07:00 AM - 08:00 AM',
+    durationMinutes: 60,
+    capacity: 20,
+    bookedCount: 14,
+    waitlistCapacity: 5,
+    waitlistCount: 0,
+    date: '2026-10-15',
+    attendees: [],
+  },
+  {
+    id: 'slot-2',
+    name: 'Olympic Snatch & Clean Pulls Masterclass',
+    category: 'Weightlifting',
+    trainerName: 'Rohan Malhotra',
+    trainerId: 'tr-2',
+    room: 'Heavy Lifting Bay',
+    time: '08:30 AM - 09:30 AM',
+    durationMinutes: 60,
+    capacity: 12,
+    bookedCount: 12,
+    waitlistCapacity: 5,
+    waitlistCount: 2,
+    date: '2026-10-15',
+    attendees: [],
+  },
+];
 
 const INITIAL_TRIALS: TrialBookingItem[] = [];
 
@@ -100,13 +133,71 @@ export const ClassesPage: React.FC = () => {
   const [membersList, setMembersList] = useState<any[]>([]);
   const [trainersList, setTrainersList] = useState<any[]>([]);
 
-  // Fetch real calendar and members on mount
+  // Fetch real calendar, trials, and members on mount
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const res = await api.get('/classes/calendar?date=2026-10-15');
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setSchedule(res.data);
+        const [calRes, trialRes] = await Promise.all([
+          api.get('/bookings/calendar?date=2026-10-15'),
+          api.get('/trials'),
+        ]);
+
+        if (calRes.success && calRes.data) {
+          const calData = calRes.data;
+          if (Array.isArray(calData) && calData.length > 0) {
+            setSchedule(calData);
+          } else if (calData.classes && Array.isArray(calData.classes) && calData.classes.length > 0) {
+            const mappedSlots: ClassSlotItem[] = calData.classes.map((cls: any) => {
+              const classBookings = Array.isArray(calData.bookings)
+                ? calData.bookings.filter((b: any) => String(b.classId) === String(cls._id))
+                : [];
+              const confirmed = classBookings.filter((b: any) => b.status === 'CONFIRMED');
+              const waitlisted = classBookings.filter((b: any) => b.status === 'WAITLISTED');
+              return {
+                id: cls._id,
+                name: cls.name,
+                category: cls.category || 'CrossFit',
+                trainerName: cls.trainerName || 'Trainer Staff',
+                trainerId: cls.trainerId || 'tr-1',
+                room: cls.room || 'Main Fitness Hall',
+                time: `${cls.startTime || '07:00'} - ${cls.endTime || '08:00'}`,
+                durationMinutes: cls.durationMinutes || 60,
+                capacity: cls.capacity || 20,
+                bookedCount: confirmed.length,
+                waitlistCapacity: cls.waitlistCapacity || 5,
+                waitlistCount: waitlisted.length,
+                date: '2026-10-15',
+                attendees: classBookings.map((b: any) => ({
+                  id: b._id,
+                  bookingId: b._id,
+                  memberName: b.memberName || 'Gym Member',
+                  memberCode: b.memberCode || 'MBR-001',
+                  bookingType: 'CLASS',
+                  status: b.status,
+                  waitlistPosition: b.waitlistPosition,
+                })),
+              };
+            });
+            setSchedule(mappedSlots);
+          }
+        }
+
+        if (trialRes.success && Array.isArray(trialRes.data) && trialRes.data.length > 0) {
+          setTrials(
+            trialRes.data.map((t: any) => ({
+              id: t._id || t.id,
+              prospectName: t.name || t.prospectName || 'Prospect',
+              prospectPhone: t.phone || t.prospectPhone || '',
+              prospectEmail: t.email || t.prospectEmail || '',
+              classSlotName: t.classSlotName || 'Trial Session',
+              slotTime: t.slotTime
+                ? new Date(t.slotTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '07:00 AM - 08:00 AM',
+              trainerName: t.trainerName || 'Staff Coach',
+              status: t.status || 'SCHEDULED',
+              attendedAt: t.attendedAt,
+            })),
+          );
         }
       } catch {
         // Fallback to initial schedule
@@ -150,12 +241,27 @@ export const ClassesPage: React.FC = () => {
       return;
     }
 
+    let createdBookingId = `b-${Date.now()}`;
     try {
-      await api.post(`/classes/${selectedSlot.id}/book`, {
-        bookingType: bookingForm.bookingType,
+      const selectedMember =
+        membersList.find(
+          (m) =>
+            `${m.name} (${m.code || m.memberCode || ''})` === bookingForm.memberName ||
+            m.id === bookingForm.memberName ||
+            m._id === bookingForm.memberName,
+        ) || membersList[0];
+
+      const res = await api.post('/bookings', {
+        branchId: selectedMember?.branchId || selectedMember?.homeBranchId || '650000000000000000000001',
+        memberId: selectedMember?._id || selectedMember?.id || '650000000000000000000001',
+        classId: selectedSlot.id.startsWith('slot-') ? '650000000000000000000001' : selectedSlot.id,
+        slotTime: new Date().toISOString(),
       });
+      if (res.success && res.data?.booking?._id) {
+        createdBookingId = res.data.booking._id;
+      }
     } catch {
-      // Local atomic update
+      // Local atomic update fallback
     }
 
     setSchedule((prev) =>
@@ -169,8 +275,8 @@ export const ClassesPage: React.FC = () => {
               attendees: [
                 ...slot.attendees,
                 {
-                  id: `att-${Date.now()}`,
-                  bookingId: `b-${Date.now()}`,
+                  id: createdBookingId,
+                  bookingId: createdBookingId,
                   memberName: bookingForm.memberName,
                   memberCode: 'IP-FIT-001',
                   bookingType: bookingForm.bookingType,
@@ -186,8 +292,8 @@ export const ClassesPage: React.FC = () => {
               attendees: [
                 ...slot.attendees,
                 {
-                  id: `att-${Date.now()}`,
-                  bookingId: `b-${Date.now()}`,
+                  id: createdBookingId,
+                  bookingId: createdBookingId,
                   memberName: bookingForm.memberName,
                   memberCode: 'IP-FIT-001',
                   bookingType: bookingForm.bookingType,
@@ -221,8 +327,14 @@ export const ClassesPage: React.FC = () => {
 
   // Handle Cancellation & Automatic Waitlist Promotion
   const handleCancelBooking = async (slotId: string, attendeeId: string) => {
+    const slot = schedule.find((s) => s.id === slotId);
+    const targetAtt = slot?.attendees.find((a) => a.id === attendeeId);
+    const bookingIdToCancel = targetAtt?.bookingId || attendeeId;
+
     try {
-      await api.delete(`/classes/bookings/${attendeeId}`);
+      if (bookingIdToCancel && !bookingIdToCancel.startsWith('b-') && !bookingIdToCancel.startsWith('att-')) {
+        await api.post(`/bookings/${bookingIdToCancel}/cancel`);
+      }
     } catch {
       // Local fallback
     }
@@ -230,13 +342,13 @@ export const ClassesPage: React.FC = () => {
     let promotedMemberName: string | null = null;
 
     setSchedule((prev) =>
-      prev.map((slot) => {
-        if (slot.id === slotId) {
-          const removed = slot.attendees.find((a) => a.id === attendeeId);
+      prev.map((s) => {
+        if (s.id === slotId) {
+          const removed = s.attendees.find((a) => a.id === attendeeId);
           const wasConfirmed = removed?.status === 'CONFIRMED';
-          const remainingAttendees = slot.attendees.filter((a) => a.id !== attendeeId);
+          const remainingAttendees = s.attendees.filter((a) => a.id !== attendeeId);
 
-          if (wasConfirmed && slot.waitlistCount > 0) {
+          if (wasConfirmed && s.waitlistCount > 0) {
             // Promote top waitlisted member
             const waitlistedIdx = remainingAttendees.findIndex((a) => a.status === 'WAITLISTED');
             if (waitlistedIdx !== -1) {
@@ -248,26 +360,26 @@ export const ClassesPage: React.FC = () => {
               };
             }
             return {
-              ...slot,
-              waitlistCount: Math.max(0, slot.waitlistCount - 1),
+              ...s,
+              waitlistCount: Math.max(0, s.waitlistCount - 1),
               attendees: remainingAttendees,
             };
           } else if (wasConfirmed) {
             return {
-              ...slot,
-              bookedCount: Math.max(0, slot.bookedCount - 1),
+              ...s,
+              bookedCount: Math.max(0, s.bookedCount - 1),
               attendees: remainingAttendees,
             };
           } else {
             // Cancelled a waitlisted entry
             return {
-              ...slot,
-              waitlistCount: Math.max(0, slot.waitlistCount - 1),
+              ...s,
+              waitlistCount: Math.max(0, s.waitlistCount - 1),
               attendees: remainingAttendees,
             };
           }
         }
-        return slot;
+        return s;
       }),
     );
 
@@ -287,7 +399,7 @@ export const ClassesPage: React.FC = () => {
   };
 
   // Register Trial
-  const handleCreateTrial = (e: React.FormEvent) => {
+  const handleCreateTrial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!trialForm.name || !trialForm.phone) {
       addToast({ title: 'Validation Error', message: 'Name and phone are required', type: 'error' });
@@ -296,8 +408,25 @@ export const ClassesPage: React.FC = () => {
 
     const targetSlot = schedule.find((s) => s.id === trialForm.slotId);
 
+    let trialId = `tr-book-${Date.now()}`;
+    try {
+      const res = await api.post('/trials', {
+        branchId: '650000000000000000000001',
+        name: trialForm.name,
+        phone: trialForm.phone,
+        email: trialForm.email || undefined,
+        slotTime: new Date().toISOString(),
+        notes: `Complimentary trial with ${trialForm.trainerName}`,
+      });
+      if (res.success && res.data?._id) {
+        trialId = res.data._id;
+      }
+    } catch {
+      // Local fallback
+    }
+
     const newTrial: TrialBookingItem = {
-      id: `tr-book-${Date.now()}`,
+      id: trialId,
       prospectName: trialForm.name,
       prospectPhone: trialForm.phone,
       prospectEmail: trialForm.email || 'prospect@ironpulse-crm.org',
@@ -589,7 +718,14 @@ export const ClassesPage: React.FC = () => {
                       {trial.status !== 'CONVERTED' ? (
                         <Button
                           size="sm"
-                          onClick={() => {
+                          onClick={async () => {
+                            try {
+                              if (!trial.id.startsWith('tr-book-')) {
+                                await api.post(`/trials/${trial.id}/convert`, {});
+                              }
+                            } catch {
+                              // Local fallback
+                            }
                             setTrials((prev) =>
                               prev.map((t) => (t.id === trial.id ? { ...t, status: 'CONVERTED' } : t)),
                             );

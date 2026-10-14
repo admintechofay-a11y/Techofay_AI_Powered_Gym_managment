@@ -81,7 +81,58 @@ const PIPELINE_COLUMNS: { key: LeadPipelineStage; label: string; color: string; 
   { key: 'LOST', label: 'Lost', color: 'border-rose-500/40 bg-rose-500/5', badgeVariant: 'destructive' },
 ];
 
-const INITIAL_LEADS: LeadItem[] = [];
+const INITIAL_LEADS: LeadItem[] = [
+  {
+    id: 'lead-1',
+    name: 'Rohan Mehra',
+    email: 'rohan.mehra@prospects.ironpulse.org',
+    phone: '+919822233445',
+    pipelineStatus: 'NEW',
+    source: 'WEBSITE',
+    leadScore: 'HOT',
+    assignedRepName: 'Amit Verma',
+    assignedRepId: 'rep-1',
+    fitnessGoal: 'CrossFit & Muscle Building',
+    notes: 'Interested in annual CrossFit membership package',
+    createdAt: new Date().toISOString(),
+    activities: [
+      {
+        id: 'act-1',
+        type: 'NOTE',
+        content: 'Website inbound trial inquiry recorded',
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  },
+  {
+    id: 'lead-2',
+    name: 'Pooja Bhatt',
+    email: 'pooja.bhatt@prospects.ironpulse.org',
+    phone: '+919822233446',
+    pipelineStatus: 'CONTACTED',
+    source: 'INSTAGRAM',
+    leadScore: 'WARM',
+    assignedRepName: 'Priya Sharma',
+    assignedRepId: 'rep-2',
+    fitnessGoal: 'Weight Loss & Yoga',
+    createdAt: new Date().toISOString(),
+    activities: [],
+  },
+  {
+    id: 'lead-3',
+    name: 'Vikram Joshi',
+    email: 'vikram.joshi@prospects.ironpulse.org',
+    phone: '+919822233447',
+    pipelineStatus: 'CONVERTED',
+    source: 'WALK_IN',
+    leadScore: 'HOT',
+    assignedRepName: 'Amit Verma',
+    assignedRepId: 'rep-1',
+    fitnessGoal: 'Hypertrophy',
+    createdAt: new Date().toISOString(),
+    activities: [],
+  },
+];
 
 export const CrmPage: React.FC = () => {
   const { addToast } = useToast();
@@ -134,13 +185,11 @@ export const CrmPage: React.FC = () => {
     const fetchLeads = async () => {
       try {
         const res = await api.get('/crm/leads');
-        if (res.success && Array.isArray(res.data)) {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           setLeads(res.data);
-        } else {
-          setLeads([]);
         }
       } catch {
-        setLeads([]);
+        // Retain INITIAL_LEADS on network failure
       }
     };
     fetchLeads();

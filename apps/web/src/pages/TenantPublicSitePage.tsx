@@ -156,7 +156,16 @@ const DEFAULT_GYM_PAYLOAD: GymPayload = {
       isPopular: false,
     },
   ],
-  trainers: [],
+  trainers: [
+    {
+      id: 'tr-rohan',
+      name: 'Rohan Malhotra',
+      specializations: ['Olympic Weightlifting', 'Functional Hypertrophy', 'Fat Loss Conditioning'],
+      qualifications: ['CSCS Certified Strength Coach', 'B.Sc. Exercise Science'],
+      rating: 4.9,
+      bio: 'Head Strength Coach with 8+ years coaching athletes to measurable PR breakthroughs.',
+    },
+  ],
   facilities: [
     { name: 'Olympic Competition Power Racks & Eleiko Barbells', icon: 'Dumbbell' },
     { name: 'State-of-the-Art Cardio Zone', icon: 'Activity' },

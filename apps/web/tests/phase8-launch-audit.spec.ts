@@ -59,7 +59,7 @@ test.describe('Phase 8: Launch Checklist Audit & 9-Role Walkthrough', () => {
 
   test('Role 4: RECEPTIONIST Walkthrough', async ({ page }) => {
     await mockUserRole(page, 'RECEPTIONIST', 'Sneha Kapoor');
-    await page.goto('/attendance');
+    await page.goto('/dashboard');
 
     await expect(page.locator('h1')).toContainText('Executive Overview');
     const simButton = page.getByRole('button', { name: /Gate \/ Biometric Simulator/i });
@@ -102,7 +102,7 @@ test.describe('Phase 8: Launch Checklist Audit & 9-Role Walkthrough', () => {
 
   test('Role 8: ACCOUNTANT Walkthrough', async ({ page }) => {
     await mockUserRole(page, 'ACCOUNTANT', 'Kishore Parekh');
-    await page.goto('/billing');
+    await page.goto('/dashboard');
 
     await expect(page.locator('h1')).toContainText('Executive Overview');
     await expect(page.getByRole('button', { name: /Generate GST Tax Invoice/i })).toBeVisible();

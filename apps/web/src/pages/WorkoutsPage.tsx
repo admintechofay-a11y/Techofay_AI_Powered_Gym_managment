@@ -275,11 +275,35 @@ export const WorkoutsPage: React.FC = () => {
   const [membersList, setMembersList] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchExercises = async () => {
+    const fetchTemplatesAndExercises = async () => {
       try {
-        const res = await api.get('/workouts/exercises');
-        if (res.success && res.data?.exercises && res.data.exercises.length > 0) {
-          setExercises(res.data.exercises);
+        const [exRes, plRes] = await Promise.all([
+          api.get('/workouts/exercises'),
+          api.get('/workouts/plans'),
+        ]);
+        if (exRes.success && exRes.data?.exercises && exRes.data.exercises.length > 0) {
+          setExercises(exRes.data.exercises);
+        }
+        if (plRes.success && Array.isArray(plRes.data) && plRes.data.length > 0) {
+          setTemplates(
+            plRes.data.map((p: any) => ({
+              id: p._id || p.id,
+              title: p.title,
+              daysPerWeek: p.daysPerWeek || 3,
+              description: p.description || '',
+              schedule: (p.schedule || []).map((s: any) => ({
+                dayOfWeek: s.dayOfWeek,
+                focus: s.focus,
+                exercises: (s.exercises || []).map((e: any) => ({
+                  exerciseName: e.exerciseName || 'Exercise',
+                  sets: e.sets || 3,
+                  reps: e.reps || 10,
+                  weightInKg: e.weightInKg,
+                  restSeconds: e.restSeconds || 60,
+                })),
+              })),
+            })),
+          );
         }
       } catch {
         // Fallback to INITIAL_EXERCISES
@@ -293,7 +317,7 @@ export const WorkoutsPage: React.FC = () => {
         // Fallback or ignore if members endpoint fails
       }
     };
-    fetchExercises();
+    fetchTemplatesAndExercises();
     fetchMembers();
   }, []);
 
@@ -307,24 +331,80 @@ export const WorkoutsPage: React.FC = () => {
   });
 
   // Assign template
-  const handleAssignPlan = () => {
+  const handleAssignPlan = async () => {
     if (!targetTemplate) return;
+
+    const selectedMember =
+      membersList.find(
+        (m) =>
+          `${m.name} (${m.code || m.memberCode || ''})` === assignForm.memberName ||
+          m.id === assignForm.memberId ||
+          m._id === assignForm.memberId,
+      ) || membersList[0];
+
+    const memberId = selectedMember?._id || selectedMember?.id || '650000000000000000000001';
+    const planId = targetTemplate.id.startsWith('tpl-') ? '650000000000000000000001' : targetTemplate.id;
+
+    try {
+      await api.post(`/workouts/plans/${planId}/assign`, {
+        memberId,
+        planId,
+        startDate: new Date(assignForm.startDate || Date.now()).toISOString(),
+      });
+    } catch {
+      // Local fallback
+    }
 
     addToast({
       title: 'Plan Assigned!',
-      message: `Assigned "${targetTemplate.title}" to ${assignForm.memberName}. Starts on ${assignForm.startDate}.`,
+      message: `Assigned "${targetTemplate.title}" to ${assignForm.memberName || selectedMember?.name || 'Member'}. Starts on ${assignForm.startDate}.`,
       type: 'success',
     });
     setIsAssignModalOpen(false);
   };
 
   // Log session
-  const handleLogSession = (e: React.FormEvent) => {
+  const handleLogSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    const volume = logForm.sets * logForm.reps * logForm.weightKg;
+    const volume = Number(logForm.sets) * Number(logForm.reps) * Number(logForm.weightKg);
+
+    const selectedMember =
+      membersList.find(
+        (m) =>
+          `${m.name} (${m.code || m.memberCode || ''})` === logForm.memberName ||
+          m.id === logForm.memberName ||
+          m._id === logForm.memberName,
+      ) || membersList[0];
+
+    const memberId = selectedMember?._id || selectedMember?.id || '650000000000000000000001';
+
+    let logId = `log-${Date.now()}`;
+    try {
+      const res = await api.post('/workouts/logs', {
+        memberId,
+        title: logForm.title || 'Strength Session',
+        date: new Date().toISOString(),
+        durationMinutes: Number(logForm.durationMinutes) || 45,
+        exercises: [
+          {
+            exerciseId: '650000000000000000000001',
+            exerciseName: logForm.exerciseName || 'Compound Lift',
+            setsCompleted: Number(logForm.sets) || 3,
+            repsCompleted: Number(logForm.reps) || 10,
+            weightKg: Number(logForm.weightKg) || 0,
+          },
+        ],
+        notes: logForm.notes,
+      });
+      if (res.success && res.data?._id) {
+        logId = res.data._id;
+      }
+    } catch {
+      // Local fallback
+    }
 
     const newLog: WorkoutLogItem = {
-      id: `log-${Date.now()}`,
+      id: logId,
       memberName: logForm.memberName,
       title: logForm.title,
       date: new Date().toISOString().split('T')[0],

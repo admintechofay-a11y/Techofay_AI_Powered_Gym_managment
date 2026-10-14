@@ -952,7 +952,7 @@ Invalid Row, 12345, bad-email, Monthly Gold`)
             value={csvContent}
             onChange={(e) => handleParseCsv(e.target.value)}
             rows={5}
-            placeholder={'Full Name, +919800000001, member@example.com, Annual Plan\nFull Name 2, +919800000002, member2@example.com, Monthly Plan'}
+            placeholder={'Full Name, +919800000001, member@techofay.com, Annual Plan\nFull Name 2, +919800000002, member2@techofay.com, Monthly Plan'}
             className="w-full text-xs font-mono p-3 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
 

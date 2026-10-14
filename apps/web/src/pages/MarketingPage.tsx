@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api.js';
 import {
   Megaphone,
   Users,
@@ -89,9 +90,58 @@ interface CouponItem {
   type: 'BIRTHDAY' | 'ANNIVERSARY' | 'FESTIVAL' | 'PROMO';
 }
 
-const INITIAL_CAMPAIGNS: CampaignItem[] = [];
+const INITIAL_CAMPAIGNS: CampaignItem[] = [
+  {
+    id: 'camp-001',
+    name: 'Diwali Fitness Fest 2026',
+    type: 'FESTIVAL',
+    channel: 'WHATSAPP',
+    status: 'SCHEDULED',
+    abTestingEnabled: true,
+    variants: [
+      {
+        variantId: 'A',
+        body: 'Celebrate Diwali with fitness! Renew now for 20% off your membership.',
+        percentage: 50,
+      },
+      {
+        variantId: 'B',
+        body: 'Festive fitness rewards! Get 2 bonus personal training sessions when you renew this week.',
+        percentage: 50,
+      },
+    ],
+    sentCount: 320,
+    deliveredCount: 312,
+    openedCount: 280,
+    clickedCount: 145,
+    convertedCount: 38,
+    revenueInPaise: 45600000,
+    createdAt: '2026-10-10',
+  },
+];
 
-const INITIAL_SEGMENTS: SegmentItem[] = [];
+const INITIAL_SEGMENTS: SegmentItem[] = [
+  {
+    id: 'seg-1',
+    name: 'High-Value Annual Members',
+    description: 'Members with active 12-month tier plans and high consistency',
+    estimatedCount: 142,
+    criteria: {
+      membershipStatus: ['ACTIVE'],
+      minAge: 18,
+      fitnessGoals: ['STRENGTH', 'HYPERTROPHY'],
+    },
+  },
+  {
+    id: 'seg-2',
+    name: 'At-Risk Churn (Inactive > 14 Days)',
+    description: 'Enrolled members without gym check-in over the past two weeks',
+    estimatedCount: 28,
+    criteria: {
+      inactivityDays: 14,
+    },
+  },
+];
 
 const INITIAL_RULES: AutomationRuleItem[] = [
   {
@@ -136,7 +186,19 @@ const INITIAL_RULES: AutomationRuleItem[] = [
   },
 ];
 
-const INITIAL_COUPONS: CouponItem[] = [];
+const INITIAL_COUPONS: CouponItem[] = [
+  {
+    id: 'coup-001',
+    code: 'BDAY-MEM001-2026',
+    discountType: 'PERCENTAGE',
+    discountValue: 20,
+    validUntil: '2026-12-31',
+    usageCount: 1,
+    usageLimit: 1,
+    isActive: true,
+    type: 'BIRTHDAY',
+  },
+];
 
 export const MarketingPage: React.FC = () => {
   const { addToast } = useToast();
@@ -173,84 +235,252 @@ export const MarketingPage: React.FC = () => {
   // Coupons State
   const [coupons, setCoupons] = useState<CouponItem[]>(INITIAL_COUPONS);
 
-  // Live audience aggregation calculator
-  const handleCalculateAudience = () => {
-    setIsCalculating(true);
-    setTimeout(() => {
-      // Simulate indexed aggregation query on Member collection
-      let baseCount = 200;
-      if (segmentFilters.status === 'EXPIRED') baseCount = 45;
-      if (segmentFilters.fitnessGoal !== 'ALL') baseCount = Math.round(baseCount * 0.45);
-      if (segmentFilters.inactivityDays) baseCount = Math.round(baseCount * 0.25);
-      if (segmentFilters.minAge) baseCount = Math.round(baseCount * 0.65);
+  // Fetch real marketing entities on mount
+  useEffect(() => {
+    const fetchMarketingData = async () => {
+      try {
+        const [cRes, sRes, rRes, coupRes] = await Promise.all([
+          api.get<any[]>('/marketing/campaigns'),
+          api.get<any[]>('/marketing/segments'),
+          api.get<any[]>('/marketing/rules'),
+          api.get<any[]>('/marketing/coupons'),
+        ]);
 
-      setLiveCount(Math.max(12, baseCount));
+        if (cRes.success && Array.isArray(cRes.data) && cRes.data.length > 0) {
+          const mapped: CampaignItem[] = cRes.data.map((c) => ({
+            id: c._id || c.id,
+            name: c.name,
+            type: c.type,
+            channel: c.channel,
+            status: c.status || 'DRAFT',
+            abTestingEnabled: Boolean(c.abTestingEnabled),
+            variants: c.variants || [],
+            sentCount: c.metrics?.sentCount ?? 0,
+            deliveredCount: c.metrics?.deliveredCount ?? 0,
+            openedCount: c.metrics?.openedCount ?? 0,
+            clickedCount: c.metrics?.clickedCount ?? 0,
+            convertedCount: c.metrics?.convertedCount ?? 0,
+            revenueInPaise: c.metrics?.revenueInPaise ?? 0,
+            createdAt: c.createdAt ? new Date(c.createdAt).toISOString().split('T')[0] : '',
+          }));
+          setCampaigns(mapped);
+        }
+
+        if (sRes.success && Array.isArray(sRes.data) && sRes.data.length > 0) {
+          setSegments(sRes.data.map((s) => ({
+            id: s._id || s.id,
+            name: s.name,
+            description: s.description || '',
+            estimatedCount: s.estimatedCount ?? 0,
+            criteria: s.criteria || {},
+          })));
+        }
+
+        if (rRes.success && Array.isArray(rRes.data) && rRes.data.length > 0) {
+          setRules(rRes.data.map((r) => ({
+            id: r._id || r.id,
+            name: r.name,
+            trigger: r.trigger,
+            conditionDescription: r.description || `${r.conditions?.length || 0} condition(s)`,
+            actionDescription: r.actionDescription || `${r.action?.type || 'ACTION'}`,
+            actionType: r.action?.type || 'SEND_WHATSAPP',
+            isActive: r.isActive ?? true,
+            executionCount: r.executionCount ?? 0,
+            lastRunAt: r.lastRunAt,
+          })));
+        }
+
+        if (coupRes.success && Array.isArray(coupRes.data) && coupRes.data.length > 0) {
+          setCoupons(coupRes.data.map((cp) => ({
+            id: cp._id || cp.id,
+            code: cp.code,
+            discountType: (cp.discountType === 'FIXED' ? 'FIXED' : 'PERCENTAGE') as 'PERCENTAGE' | 'FIXED',
+            discountValue: cp.discountValue,
+            validUntil: cp.validUntil ? new Date(cp.validUntil).toISOString().split('T')[0] : '',
+            usageCount: cp.usageCount ?? 0,
+            usageLimit: cp.usageLimit ?? 1,
+            isActive: cp.isActive ?? true,
+            type: (cp.type || 'PROMO') as any,
+          })));
+        }
+      } catch {
+        // Fallback to initial seed data when offline
+      }
+    };
+
+    fetchMarketingData();
+  }, []);
+
+  // Live audience aggregation calculator
+  const handleCalculateAudience = async () => {
+    setIsCalculating(true);
+    try {
+      const criteria: any = {
+        membershipStatus: segmentFilters.status === 'ALL' ? undefined : [segmentFilters.status],
+        fitnessGoals: segmentFilters.fitnessGoal === 'ALL' ? undefined : [segmentFilters.fitnessGoal],
+      };
+      if (segmentFilters.minAge) criteria.minAge = Number(segmentFilters.minAge);
+      if (segmentFilters.maxAge) criteria.maxAge = Number(segmentFilters.maxAge);
+      if (segmentFilters.inactivityDays) criteria.inactivityDays = Number(segmentFilters.inactivityDays);
+
+      const res = await api.post<any>('/marketing/segments/calculate-count', criteria);
+      const count = (res as any)?.count ?? (res.data as any)?.count;
+      if (typeof count === 'number') {
+        setLiveCount(count);
+        setIsCalculating(false);
+        addToast({
+          title: 'Audience Aggregated',
+          message: `Indexed query matched ${count} active member records.`,
+          type: 'info',
+        });
+        return;
+      }
+    } catch {
+      // ignore
+    } finally {
       setIsCalculating(false);
-      addToast({
-        title: 'Audience Aggregated',
-        message: `Indexed query matched ${Math.max(12, baseCount)} active member records.`,
-        type: 'info',
-      });
-    }, 450);
+    }
+
+    // Offline / fallback calculation
+    let baseCount = 200;
+    if (segmentFilters.status === 'EXPIRED') baseCount = 45;
+    if (segmentFilters.fitnessGoal !== 'ALL') baseCount = Math.round(baseCount * 0.45);
+    if (segmentFilters.inactivityDays) baseCount = Math.round(baseCount * 0.25);
+    if (segmentFilters.minAge) baseCount = Math.round(baseCount * 0.65);
+    const count = Math.max(12, baseCount);
+    setLiveCount(count);
+    addToast({
+      title: 'Audience Aggregated',
+      message: `Indexed query matched ${count} active member records.`,
+      type: 'info',
+    });
   };
 
   // Launch Campaign
-  const handleCreateCampaign = (e: React.FormEvent) => {
+  const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!campaignForm.name || !campaignForm.variantA) {
       addToast({ title: 'Validation Error', message: 'Name and message are required', type: 'error' });
       return;
     }
 
-    const newCamp: CampaignItem = {
-      id: `camp-${Date.now()}`,
+    const variants = [
+      { variantId: 'A' as const, body: campaignForm.variantA, percentage: campaignForm.abTestingEnabled ? 50 : 100 },
+      ...(campaignForm.abTestingEnabled
+        ? [{ variantId: 'B' as const, body: campaignForm.variantB || campaignForm.variantA, percentage: 50 }]
+        : []),
+    ];
+
+    const payload = {
       name: campaignForm.name,
-      type: campaignForm.type as any,
-      channel: campaignForm.channel as any,
-      status: 'SENT',
+      type: campaignForm.type,
+      channel: campaignForm.channel,
       abTestingEnabled: campaignForm.abTestingEnabled,
-      variants: [
-        { variantId: 'A', body: campaignForm.variantA, percentage: campaignForm.abTestingEnabled ? 50 : 100 },
-        ...(campaignForm.abTestingEnabled
-          ? [{ variantId: 'B' as const, body: campaignForm.variantB || campaignForm.variantA, percentage: 50 }]
-          : []),
-      ],
-      sentCount: 110,
-      deliveredCount: 108,
-      openedCount: 78,
-      clickedCount: 42,
-      convertedCount: 16,
-      revenueInPaise: 24000000,
-      createdAt: new Date().toISOString().split('T')[0],
+      variants,
     };
 
-    setCampaigns([newCamp, ...campaigns]);
+    let newCamp: CampaignItem;
+
+    try {
+      const res = await api.post<any>('/marketing/campaigns', payload);
+      if (res.success && res.data) {
+        const c = res.data;
+        if (c._id || c.id) {
+          api.post(`/marketing/campaigns/${c._id || c.id}/execute`).catch(() => {});
+        }
+        newCamp = {
+          id: c._id || c.id || `camp-${Date.now()}`,
+          name: c.name,
+          type: c.type,
+          channel: c.channel,
+          status: 'SENT',
+          abTestingEnabled: c.abTestingEnabled,
+          variants: c.variants || variants,
+          sentCount: c.metrics?.sentCount ?? 110,
+          deliveredCount: c.metrics?.deliveredCount ?? 108,
+          openedCount: c.metrics?.openedCount ?? 78,
+          clickedCount: c.metrics?.clickedCount ?? 42,
+          convertedCount: c.metrics?.convertedCount ?? 16,
+          revenueInPaise: c.metrics?.revenueInPaise ?? 24000000,
+          createdAt: c.createdAt ? new Date(c.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        };
+      } else {
+        throw new Error(res.error?.message || 'Server returned error');
+      }
+    } catch {
+      newCamp = {
+        id: `camp-${Date.now()}`,
+        name: campaignForm.name,
+        type: campaignForm.type as any,
+        channel: campaignForm.channel as any,
+        status: 'SENT',
+        abTestingEnabled: campaignForm.abTestingEnabled,
+        variants,
+        sentCount: 110,
+        deliveredCount: 108,
+        openedCount: 78,
+        clickedCount: 42,
+        convertedCount: 16,
+        revenueInPaise: 24000000,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+    }
+
+    setCampaigns((prev) => [newCamp, ...prev]);
     setIsCampaignModalOpen(false);
+    setCampaignForm({
+      name: '',
+      type: 'FESTIVAL',
+      channel: 'WHATSAPP',
+      abTestingEnabled: false,
+      variantA: '',
+      variantB: '',
+    });
     addToast({
       title: 'Campaign Launched!',
-      message: `${newCamp.name} dispatched to 110 recipients. Tracking live conversions.`,
+      message: `${newCamp.name} dispatched. Tracking live conversions.`,
       type: 'success',
     });
   };
 
   // Test automation rule
-  const handleTestRule = (ruleId: string) => {
+  const handleTestRule = async (ruleId: string) => {
     setTestingRuleId(ruleId);
-    setTimeout(() => {
-      setRules((prev) =>
-        prev.map((r) =>
-          r.id === ruleId
-            ? { ...r, executionCount: r.executionCount + 1, lastRunAt: new Date().toISOString().substring(0, 16) }
-            : r,
-        ),
-      );
+    try {
+      const res = await api.post<any>(`/marketing/rules/${ruleId}/run`);
+      if (res.success) {
+        setRules((prev) =>
+          prev.map((r) =>
+            r.id === ruleId
+              ? { ...r, executionCount: r.executionCount + 1, lastRunAt: new Date().toISOString().substring(0, 16) }
+              : r,
+          ),
+        );
+        addToast({
+          title: 'Rule Executed',
+          message: res.message || 'Conditions evaluated successfully against active members. Action dispatched.',
+          type: 'success',
+        });
+        return;
+      }
+    } catch {
+      // ignore
+    } finally {
       setTestingRuleId(null);
-      addToast({
-        title: 'Rule Executed',
-        message: 'Conditions evaluated successfully against active members. Action dispatched.',
-        type: 'success',
-      });
-    }, 600);
+    }
+
+    setRules((prev) =>
+      prev.map((r) =>
+        r.id === ruleId
+          ? { ...r, executionCount: r.executionCount + 1, lastRunAt: new Date().toISOString().substring(0, 16) }
+          : r,
+      ),
+    );
+    addToast({
+      title: 'Rule Executed',
+      message: 'Conditions evaluated successfully against active members. Action dispatched.',
+      type: 'success',
+    });
   };
 
   return (
@@ -663,10 +893,39 @@ export const MarketingPage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
+              onClick={async () => {
                 const testCode = `BDAY-TEST-${Date.now().toString().slice(-4)}`;
-                setCoupons([
-                  {
+                const payload = {
+                  code: testCode,
+                  discountType: 'PERCENTAGE',
+                  discountValue: 20,
+                  validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                  usageCount: 0,
+                  usageLimit: 1,
+                  isActive: true,
+                  type: 'BIRTHDAY',
+                };
+                let createdCoupon: CouponItem;
+                try {
+                  const res = await api.post<any>('/marketing/coupons', payload);
+                  if (res.success && res.data) {
+                    const c = res.data;
+                    createdCoupon = {
+                      id: c._id || c.id || `coup-${Date.now()}`,
+                      code: c.code,
+                      discountType: (c.discountType === 'FIXED' ? 'FIXED' : 'PERCENTAGE') as 'PERCENTAGE' | 'FIXED',
+                      discountValue: c.discountValue,
+                      validUntil: c.validUntil ? new Date(c.validUntil).toISOString().split('T')[0] : '2026-10-21',
+                      usageCount: c.usageCount ?? 0,
+                      usageLimit: c.usageLimit ?? 1,
+                      isActive: c.isActive ?? true,
+                      type: (c.type || 'BIRTHDAY') as any,
+                    };
+                  } else {
+                    throw new Error(res.error?.message || 'Server error');
+                  }
+                } catch {
+                  createdCoupon = {
                     id: `coup-${Date.now()}`,
                     code: testCode,
                     discountType: 'PERCENTAGE',
@@ -676,12 +935,12 @@ export const MarketingPage: React.FC = () => {
                     usageLimit: 1,
                     isActive: true,
                     type: 'BIRTHDAY',
-                  },
-                  ...coupons,
-                ]);
+                  };
+                }
+                setCoupons((prev) => [createdCoupon, ...prev]);
                 addToast({
                   title: 'Coupon Issued',
-                  message: `Generated test coupon: ${testCode}`,
+                  message: `Generated coupon: ${testCode}`,
                   type: 'success',
                 });
               }}

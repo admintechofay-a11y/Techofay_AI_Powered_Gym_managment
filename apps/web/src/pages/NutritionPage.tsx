@@ -88,17 +88,39 @@ export const NutritionPage: React.FC = () => {
 
   // Fetch real foods from API on mount
   useEffect(() => {
-    const fetchFoods = async () => {
+    const fetchFoodsAndPlans = async () => {
       try {
-        const res = await api.get('/nutrition/foods');
-        if (res.success && res.data?.foods && res.data.foods.length > 0) {
-          setFoods(res.data.foods);
+        const [fRes, pRes] = await Promise.all([
+          api.get('/nutrition/foods'),
+          api.get('/nutrition/plans'),
+        ]);
+        if (fRes.success && fRes.data?.foods && fRes.data.foods.length > 0) {
+          setFoods(fRes.data.foods);
+        }
+        if (pRes.success && Array.isArray(pRes.data) && pRes.data.length > 0) {
+          setPlans(
+            pRes.data.map((p: any) => ({
+              id: p._id || p.id,
+              memberName: p.memberName || 'Gym Member',
+              memberCode: p.memberCode || 'MBR-001',
+              title: p.title || 'Personalized Diet Plan',
+              dailyCalorieTarget: p.dailyCalorieTarget || 2200,
+              proteinGrams: p.proteinGrams || 150,
+              carbsGrams: p.carbsGrams || 200,
+              fatsGrams: p.fatsGrams || 60,
+              waterIntakeLiters: p.waterIntakeLiters || 3.5,
+              status: p.status || 'PENDING_REVIEW',
+              reviewNotes: p.reviewNotes,
+              approvedByNutritionistName: p.approvedByNutritionistName,
+              meals: p.meals || [],
+            })),
+          );
         }
       } catch {
         // Fallback
       }
     };
-    fetchFoods();
+    fetchFoodsAndPlans();
   }, []);
 
   // Scientific Mifflin-St Jeor calculation
@@ -149,16 +171,29 @@ export const NutritionPage: React.FC = () => {
   });
 
   // Handle Nutritionist Review Action
-  const handleApprovePlan = (status: 'APPROVED' | 'REJECTED') => {
+  const handleApprovePlan = async (status: 'APPROVED' | 'REJECTED') => {
     if (!selectedPlanForReview) return;
+    const planId = selectedPlanForReview.id;
+    const notes = reviewNotesInput || (status === 'APPROVED' ? 'Approved by Nutritionist' : 'Rejected for revisions');
+
+    try {
+      if (planId && !planId.startsWith('plan-')) {
+        await api.post(`/nutrition/plans/${planId}/review`, {
+          status,
+          reviewNotes: notes,
+        });
+      }
+    } catch {
+      // Local fallback
+    }
 
     setPlans((prev) =>
       prev.map((p) => {
-        if (p.id === selectedPlanForReview.id) {
+        if (p.id === planId) {
           return {
             ...p,
             status,
-            reviewNotes: reviewNotesInput || (status === 'APPROVED' ? 'Approved by Nutritionist' : 'Rejected for revisions'),
+            reviewNotes: notes,
             approvedByNutritionistName: status === 'APPROVED' ? 'Dr. Riya Sen (RD, Sports Nutrition)' : undefined,
           };
         }
@@ -177,9 +212,20 @@ export const NutritionPage: React.FC = () => {
   };
 
   // Water log quick addition
-  const addWater = (amountL: number) => {
+  const addWater = async (amountL: number) => {
     const newTotal = parseFloat((waterLoggedLiters + amountL).toFixed(2));
     setWaterLoggedLiters(newTotal);
+
+    try {
+      await api.post('/nutrition/water', {
+        memberId: '650000000000000000000001',
+        amountLiters: amountL,
+        date: new Date().toISOString(),
+      });
+    } catch {
+      // Local fallback
+    }
+
     addToast({
       title: 'Water Logged',
       message: `Added +${amountL * 1000} ml. Daily total: ${newTotal} Liters.`,
